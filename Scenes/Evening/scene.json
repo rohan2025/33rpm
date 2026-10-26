@@ -1,0 +1,51 @@
+{
+  "canvas": [1500, 1000],
+  "edgeFade": 160,
+  "focus": [700, 450],
+
+  "layers": [
+    { "slot": "background",    "frame": [0, 0, 1500, 1000] },
+    { "slot": "video",         "frame": [0, 0, 1500, 1000], "blend": "screen", "opacity": 0.6 },
+    { "slot": "lamp_glow",     "frame": [756, -352, 900, 900], "blend": "screen", "opacity": 0.22, "flicker": 0.12 },
+    { "slot": "up_next",       "frame": [478, 64, 290, 300], "rotation": 1.5 },
+    { "slot": "sleeve_shadow", "frame": [814, 288, 142, 142], "opacity": 0.8 },
+    { "slot": "sleeve",        "frame": [814, 294, 128, 128], "rotation": -2 },
+    { "slot": "crate",         "frame": [986, 373, 166, 71] },
+    { "slot": "deck" },
+    { "slot": "dust",          "frame": [1000, 90, 420, 520], "amount": 0.8 }
+  ],
+
+  "deck": {
+    "center": [598, 428],
+    "size": [300, 300],
+    "tilt": 75,
+    "perspective": 2000,
+    "layers": [
+      { "slot": "record",  "frame": [45, 45, 210, 210] },
+      { "slot": "tonearm", "frame": [255.5, -1.7, 48.9, 225], "anchor": [0.5, 0.2077] }
+    ]
+  },
+
+  "record": {
+    "rpm": 33.333,
+    "labelDiameter": 0.36,
+    "sheenOpacity": 0.25,
+    "spinUpSeconds": 1.0,
+    "spinDownSeconds": 1.8
+  },
+
+  "crate": {
+    "sleeveSize": 0.62,
+    "peek": 0.33,
+    "browseLift": 0.75,
+    "sleeveShade": 0.42,
+    "lightFrom": "right"
+  },
+
+  "tonearm": {
+    "restAngle": 0,
+    "startAngle": 17,
+    "endAngle": 36,
+    "moveSeconds": 1.4
+  }
+}

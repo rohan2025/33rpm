@@ -1,0 +1,4 @@
+build/
+App/.build/
+.DS_Store
+Scenes/*/_sources/

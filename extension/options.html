@@ -1,0 +1,29 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>33rpm Bridge</title>
+  <style>
+    body { font: 13px -apple-system, system-ui, sans-serif; width: 320px; margin: 16px; color: #222; }
+    h1 { font-size: 15px; margin: 0 0 12px; }
+    label { display: block; margin: 10px 0 4px; font-weight: 600; }
+    input { width: 100%; box-sizing: border-box; padding: 6px; font: 12px ui-monospace, monospace; }
+    button { margin-top: 12px; padding: 6px 14px; }
+    #status { margin-top: 14px; padding: 8px; border-radius: 6px; background: #eee; }
+    #status.connected { background: #dff5e1; }
+    #status.bad_token, #status.no_token { background: #fbe3e3; }
+    .hint { color: #666; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <h1>33rpm Bridge</h1>
+  <label for="token">Pairing token</label>
+  <input id="token" type="password" autocomplete="off" placeholder="Copy from 33rpm app">
+  <label for="port">Port</label>
+  <input id="port" type="number" min="1024" max="65535" placeholder="33333">
+  <button id="save">Save</button>
+  <div id="status">…</div>
+  <p class="hint">Only connects to 127.0.0.1 on this Mac.</p>
+  <script src="options.js"></script>
+</body>
+</html>
