@@ -12,7 +12,7 @@ music.youtube.com tab ──► Chrome extension (MV3) ──ws://127.0.0.1:3333
 
 ## Install (for everyone)
 
-1. Download **[33rpm-1.0.0.dmg](https://github.com/rohan2025/33rpm/releases/latest)** from the latest release,
+1. Download **[33rpm-1.1.0.dmg](https://github.com/rohan2025/33rpm/releases/latest)** from the latest release,
    drag **33rpm** into Applications and open it.
    It's a free hobby app and isn't notarized, so macOS will block it the first time:
    open **System Settings → Privacy & Security**, scroll down and click **Open Anyway**.
@@ -188,7 +188,11 @@ A replayed song goes back into the crate at the front, not twice.
 
 ## Controls on the desktop
 
-- **Click the turntable** to play or pause. Pointing at it also fades in ⏮ ⏯ ⏭ just in front of the deck.
+- **Brass controls** on the console door: ⏮ ⏯ ⏭, engraved into a brushed-brass plate. Clicking the turntable
+  itself also plays or pauses. Drop a `control_plate.png` (196×52 ratio, buttons at 25/50/75%) into a scene to
+  use your own plate art; `controls.center` / `controls.scale` in scene.json place it.
+- **Song title on the wall**: the current song in gilt serif lettering, blended into the plaster
+  (`now_playing` entry in scene.json: `frame`, `blend`).
 - **Up Next card** on the wall lists the next 5 songs in your YouTube Music queue; click one to jump to it.
 - **The crate**: hover to flip through, click a sleeve to play it again.
 

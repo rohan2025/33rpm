@@ -43,8 +43,10 @@ final class AppSettings: ObservableObject {
             if let rpm { defaults.set(rpm, forKey: "rpm") } else { defaults.removeObject(forKey: "rpm") }
         }
     }
-    /// Play/pause, previous, next under the turntable when the pointer is over it.
+    /// Brass play/pause, previous, next plate on the console.
     @Published var showControls: Bool { didSet { defaults.set(showControls, forKey: "showControls") } }
+    /// The song title lettered on the wall.
+    @Published var showTitle: Bool { didSet { defaults.set(showTitle, forKey: "showTitle") } }
     /// Up Next card on the wall.
     @Published var showUpNext: Bool { didSet { defaults.set(showUpNext, forKey: "showUpNext") } }
     /// Dust, lamp flicker, rain and ambient video.
@@ -62,6 +64,7 @@ final class AppSettings: ObservableObject {
         rpm = defaults.object(forKey: "rpm") as? Double
         showControls = defaults.object(forKey: "showControls") as? Bool ?? true
         showUpNext = defaults.object(forKey: "showUpNext") as? Bool ?? true
+        showTitle = defaults.object(forKey: "showTitle") as? Bool ?? true
         ambientEffects = defaults.object(forKey: "ambientEffects") as? Bool ?? true
         isVisible = defaults.object(forKey: "isVisible") as? Bool ?? true
         scene = SceneID(rawValue: defaults.string(forKey: "scene") ?? "") ?? .evening

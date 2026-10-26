@@ -10,6 +10,8 @@ struct PlaybackInput {
     /// Seconds left in the song; 0 when unknown.
     var remaining: Double
     var label: CGImage?
+    var title: String? = nil
+    var artist: String? = nil
 }
 
 /// Layer-hosting view that draws a scene and animates the record and tonearm with Core Animation.
@@ -30,6 +32,7 @@ final class TurntableView: NSView {
     private var crateItems: [SleeveCrate.Item] = []
     private let controls = PlaybackControls()
     private let upNext = UpNextCard()
+    private let wallTitle = WallTitle()
     private var queue: [QueueItem] = []
     /// The turntable's footprint on screen (canvas points): hovering shows the controls, clicking plays/pauses.
     private var turntableRect = CGRect.zero
@@ -39,7 +42,10 @@ final class TurntableView: NSView {
         didSet { if rpmOverride != oldValue, spinning { restartSpinLoop() } }
     }
     var showsControls = true {
-        didSet { if !showsControls { controls.setShown(false) } }
+        didSet { controls.setShown(showsControls) }
+    }
+    var showsTitle = true {
+        didSet { if showsTitle != oldValue { wallTitle.set(title: input.title, artist: input.artist, visible: showsTitle, animated: true) } }
     }
     var showsUpNext = true {
         didSet { if showsUpNext != oldValue { upNext.setItems(queue, visible: showsUpNext) } }
@@ -139,6 +145,11 @@ final class TurntableView: NSView {
                 crate.configureCrate(spec, canvas: scene.config.canvasSize)
                 root.addSublayer(crate.stack)
             }
+            if spec.slot == "now_playing", spec.frame != nil, spec.hidden != true {
+                wallTitle.configure(spec, crate: scene.config.crate)
+                root.addSublayer(wallTitle.layer)
+                continue
+            }
             if spec.slot == "up_next", spec.frame != nil, spec.hidden != true {
                 upNext.configure(spec, crate: scene.config.crate)
                 root.addSublayer(upNext.layer)
@@ -188,8 +199,10 @@ final class TurntableView: NSView {
         turntableRect = CGRect(x: d.center[0] - w / 2, y: d.center[1] - h / 2 - 40, width: w, height: h + 70)
         let center = config.controls?.center.flatMap { $0.count == 2 ? CGPoint(x: $0[0], y: $0[1]) : nil }
             ?? CGPoint(x: d.center[0], y: d.center[1] + h / 2 + 60)
-        controls.configure(center: center, scale: config.controls?.scale ?? 1)
-        controls.setShown(false)
+        controls.configure(center: center, scale: config.controls?.scale ?? 1,
+                           shade: config.crate?.sleeveShade ?? 0, lightFrom: config.crate?.lightFrom ?? "right")
+        controls.setPlate(scene?.controlPlate)
+        controls.setShown(showsControls)
     }
 
     func setQueue(_ items: [QueueItem]) {
@@ -380,6 +393,7 @@ final class TurntableView: NSView {
 
         crate.setWall(input.label, animated: animated)
         controls.setPlaying(input.isPlaying)
+        wallTitle.set(title: input.title, artist: input.artist, visible: showsTitle, animated: animated)
 
         let wantedLabel = input.label ?? scene.defaultLabel
         if wantedLabel !== shownLabel {
@@ -453,7 +467,7 @@ final class TurntableView: NSView {
     /// Pointer left everything interactive.
     func endBrowse() {
         crate.endBrowse()
-        controls.setShown(false)
+        controls.highlight(nil)
         upNext.hover(at: nil)
     }
 
@@ -492,8 +506,6 @@ final class TurntableView: NSView {
         let p = canvasPoint(point)
         crate.hover(at: p)
         upNext.hover(at: p)
-        let overDeck = turntableRect.contains(p) || (controls.isShown && controls.frame.insetBy(dx: -12, dy: -12).contains(p))
-        controls.setShown(showsControls && overDeck)
         controls.highlight(controls.command(at: p))
     }
 

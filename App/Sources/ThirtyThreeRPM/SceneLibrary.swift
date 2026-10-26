@@ -118,6 +118,8 @@ struct LoadedScene {
     var images: [String: CGImage]
     var defaultLabel: CGImage
     var defaultSleeve: CGImage
+    /// Optional photographed brass faceplate for the controls (control_plate.png).
+    var controlPlate: CGImage? = nil
 }
 
 extension SceneID {
@@ -194,7 +196,8 @@ enum SceneLibrary {
         }
         let label = image(named: "default_label", in: id.folderName) ?? Placeholders.defaultLabel()
         let sleeve = image(named: "default_sleeve", in: id.folderName) ?? Placeholders.defaultSleeve()
-        return LoadedScene(id: id, config: config, images: images, defaultLabel: label, defaultSleeve: sleeve)
+        return LoadedScene(id: id, config: config, images: images, defaultLabel: label, defaultSleeve: sleeve,
+                           controlPlate: image(named: "control_plate", in: id.folderName))
     }
 
     static func image(named slot: String, in folder: String) -> CGImage? {

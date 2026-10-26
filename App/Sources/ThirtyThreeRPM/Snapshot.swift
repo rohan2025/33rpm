@@ -94,7 +94,9 @@ enum Snapshot {
         }
         // remaining 0: static arm, no sweep animation
         let label = playing && demoHistory > 0 ? (art.first?.image ?? demoArt(hue: 0.55)) : nil
-        view.apply(PlaybackInput(isPlaying: playing, progress: progress, remaining: 0, label: label), animated: false)
+        let nowTitle = playing && demoHistory > 0 ? (art.first?.title ?? "Demo Track") : nil
+        view.apply(PlaybackInput(isPlaying: playing, progress: progress, remaining: 0, label: label,
+                                 title: nowTitle, artist: nowTitle == nil ? nil : "Mira Sol"), animated: false)
         if flyAt != nil, let newest = demo.first {
             // Show the newest sleeve mid-flight from the wall into the crate.
             view.setHistory(Array(demo.dropFirst()), animated: false)

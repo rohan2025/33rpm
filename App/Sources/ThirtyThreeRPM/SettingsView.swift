@@ -27,7 +27,8 @@ struct SettingsView: View {
             }
 
             Section("On the desktop") {
-                Toggle("Play/pause controls when pointing at the turntable", isOn: $settings.showControls)
+                Toggle("Brass play/pause controls on the console", isOn: $settings.showControls)
+                Toggle("Song title on the wall", isOn: $settings.showTitle)
                 Toggle("Up Next card on the wall", isOn: $settings.showUpNext)
                 Toggle("Ambient effects (dust, lamp flicker, rain, video)", isOn: $settings.ambientEffects)
                 Text("Click the turntable to play or pause, a song on the Up Next card to play it, or a sleeve in the crate to play it again.")

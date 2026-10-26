@@ -92,6 +92,7 @@ final class DesktopWindowController {
 
         // Settings window changes apply live.
         settings.$rpm.combineLatest(settings.$showControls, settings.$showUpNext, settings.$ambientEffects)
+            .combineLatest(settings.$showTitle)
             .dropFirst()
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in
@@ -160,6 +161,7 @@ final class DesktopWindowController {
         view.rpmOverride = settings.rpm
         view.showsControls = settings.showControls
         view.showsUpNext = settings.showUpNext
+        view.showsTitle = settings.showTitle
         view.ambientEnabled = settings.ambientEffects
     }
 
@@ -291,7 +293,8 @@ final class DesktopWindowController {
         }
         let remaining = store.duration > 0 ? max(0, store.duration - store.position()) : 0
         return PlaybackInput(isPlaying: store.state == .playing, progress: store.progress(),
-                             remaining: remaining, label: labelImage)
+                             remaining: remaining, label: labelImage,
+                             title: store.track?.title, artist: store.track?.artist)
     }
 
     static func frame(for size: SceneSize, on screen: NSScreen, canvas: CGSize) -> NSRect {
