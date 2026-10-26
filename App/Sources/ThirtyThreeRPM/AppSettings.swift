@@ -43,7 +43,7 @@ final class AppSettings: ObservableObject {
             if let rpm { defaults.set(rpm, forKey: "rpm") } else { defaults.removeObject(forKey: "rpm") }
         }
     }
-    /// Brass play/pause, previous, next plate on the console.
+    /// Lit play/pause, previous, next on the turntable's edge, shown while pointing at the turntable.
     @Published var showControls: Bool { didSet { defaults.set(showControls, forKey: "showControls") } }
     /// The song title lettered on the wall.
     @Published var showTitle: Bool { didSet { defaults.set(showTitle, forKey: "showTitle") } }

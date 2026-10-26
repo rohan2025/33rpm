@@ -1,4 +1,5 @@
 build/
 App/.build/
 .DS_Store
-Scenes/*/_sources/
+Scenes/*/_sources/*
+!Scenes/*/_sources/background_source.png

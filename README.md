@@ -188,15 +188,16 @@ A replayed song goes back into the crate at the front, not twice.
 
 ## Controls on the desktop
 
-- **Brass controls** on the console door: ⏮ ⏯ ⏭, engraved into a brushed-brass plate. Clicking the turntable
-  itself also plays or pauses. Drop a `control_plate.png` (196×52 ratio, buttons at 25/50/75%) into a scene to
-  use your own plate art; `controls.center` / `controls.scale` in scene.json place it.
-- **Song title on the wall**: the current song in gilt serif lettering, blended into the plaster
-  (`now_playing` entry in scene.json: `frame`, `blend`).
-- **Up Next card** on the wall lists the next 5 songs in your YouTube Music queue; click one to jump to it.
+- **The receiver** in the console's open shelf is the remote: its amber display shows the song and artist
+  (long titles scroll), and its three left knobs are ⏮ ⏯ ⏭ (a soft amber ring shows which one you're on;
+  the display confirms each press). Clicking the turntable also plays or pauses.
+  The receiver is painted into each room photo by `scripts/composite_receiver.py`; its live display and knobs
+  are placed by the `receiver` block in scene.json.
+- **Up Next card** on the wall lists the next 4 songs in your YouTube Music queue; click one to jump to it.
 - **The crate**: hover to flip through, click a sleeve to play it again.
 
-Clicks only stop passing through to the desktop while the pointer is over the turntable, the card or the crate.
+Clicks only stop passing through to the desktop while the pointer is over the turntable, the receiver's knobs,
+the card or the crate.
 
 ## Settings
 

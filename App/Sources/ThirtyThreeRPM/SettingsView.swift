@@ -27,11 +27,11 @@ struct SettingsView: View {
             }
 
             Section("On the desktop") {
-                Toggle("Brass play/pause controls on the console", isOn: $settings.showControls)
-                Toggle("Song title on the wall", isOn: $settings.showTitle)
+                Toggle("Receiver knobs: previous, play/pause, next", isOn: $settings.showControls)
+                Toggle("Song title on the receiver's display", isOn: $settings.showTitle)
                 Toggle("Up Next card on the wall", isOn: $settings.showUpNext)
                 Toggle("Ambient effects (dust, lamp flicker, rain, video)", isOn: $settings.ambientEffects)
-                Text("Click the turntable to play or pause, a song on the Up Next card to play it, or a sleeve in the crate to play it again.")
+                Text("Use the receiver's knobs or click the turntable to play and pause. Click a song on the Up Next card to play it, or a sleeve in the crate to play it again.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

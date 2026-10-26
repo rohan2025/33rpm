@@ -1,68 +1,47 @@
 import AppKit
 import QuartzCore
 
-/// Previous / play-pause / next as a small brushed-brass faceplate on the console, with engraved symbols.
+/// Previous / play-pause / next as softly lit symbols on the turntable's front edge, like a modern deck's
+/// touch controls. They fade in only while the pointer is over the turntable.
 /// Lives in TurntableView's canvas (top-left origin, canvas points).
 @MainActor
 final class PlaybackControls {
     let layer = CALayer()
-    private let plate = CALayer()
-    /// Room light over the plate (the engravings sit on top and keep their own highlights).
-    private let dimmer = CAGradientLayer()
     private let buttons: [(command: PlayerCommand, layer: CALayer)]
     private var isPlaying = false
     private(set) var isShown = false
 
-    static let plateSize = CGSize(width: 196, height: 52)
-    private static let buttonDiameter: CGFloat = 36
-    private static let spacing: CGFloat = 56
+    private static let glyphSize: CGFloat = 13
+    private static let spacing: CGFloat = 34
 
     init() {
         buttons = [PlayerCommand.previous, .playPause, .next].map { ($0, CALayer()) }
         layer.name = "controls"
         layer.opacity = 0
-        layer.shadowColor = NSColor.black.cgColor
-        layer.shadowOpacity = 0.55
-        layer.shadowRadius = 4
-        layer.shadowOffset = CGSize(width: 0, height: 3)
-        plate.contentsGravity = .resize
-        layer.addSublayer(plate)
-        dimmer.cornerRadius = 9
-        dimmer.startPoint = CGPoint(x: 0, y: 0.5)
-        dimmer.endPoint = CGPoint(x: 1, y: 0.5)
-        layer.addSublayer(dimmer)
         for (_, button) in buttons {
             button.contentsGravity = .resizeAspect
+            // Warm backlight bleeding around the symbol.
+            button.shadowColor = NSColor(red: 1, green: 0.7, blue: 0.35, alpha: 1).cgColor
+            button.shadowOpacity = 0.9
+            button.shadowRadius = 3
+            button.shadowOffset = .zero
+            button.opacity = 0.75
             layer.addSublayer(button)
         }
-        setPlate(nil)
         updateGlyphs()
     }
 
-    /// Uses a photographed plate if the scene has one (control_plate.png), otherwise a drawn brass plate.
-    func setPlate(_ image: CGImage?) {
+    func configure(center: CGPoint, scale: CGFloat, rotation: CGFloat = 0) {
+        let width = Self.spacing * 2 + Self.glyphSize * 2
+        let height = Self.glyphSize * 2
         CATransaction.begin()
         CATransaction.setDisableActions(true)
-        plate.contents = image ?? Self.drawnPlate
-        CATransaction.commit()
-    }
-
-    func configure(center: CGPoint, scale: CGFloat, shade: CGFloat = 0, lightFrom: String = "right") {
-        let size = Self.plateSize
-        let far = NSColor.black.withAlphaComponent(min(0.8, shade * 1.3)).cgColor
-        let near = NSColor.black.withAlphaComponent(min(0.8, shade * 0.7)).cgColor
-        dimmer.colors = lightFrom == "left" ? [near, far] : [far, near]
-        CATransaction.begin()
-        CATransaction.setDisableActions(true)
-        layer.bounds = CGRect(origin: .zero, size: size)
+        layer.bounds = CGRect(x: 0, y: 0, width: width, height: height)
         layer.position = center
-        layer.setAffineTransform(CGAffineTransform(scaleX: scale, y: scale))
-        plate.frame = layer.bounds
-        dimmer.frame = layer.bounds
+        layer.setAffineTransform(CGAffineTransform(rotationAngle: rotation * .pi / 180).scaledBy(x: scale, y: scale))
         for (i, (_, button)) in buttons.enumerated() {
-            let d = Self.buttonDiameter * 0.5
-            button.bounds = CGRect(x: 0, y: 0, width: d, height: d)
-            button.position = CGPoint(x: size.width / 2 + CGFloat(i - 1) * Self.spacing, y: size.height / 2)
+            button.bounds = CGRect(x: 0, y: 0, width: Self.glyphSize, height: Self.glyphSize)
+            button.position = CGPoint(x: width / 2 + CGFloat(i - 1) * Self.spacing, y: height / 2)
         }
         CATransaction.commit()
     }
@@ -79,7 +58,7 @@ final class PlaybackControls {
         guard shown != isShown else { return }
         isShown = shown
         CATransaction.begin()
-        CATransaction.setAnimationDuration(0.4)
+        CATransaction.setAnimationDuration(shown ? 0.35 : 0.6)
         layer.opacity = shown ? 1 : 0
         CATransaction.commit()
         if !shown { highlight(nil) }
@@ -88,7 +67,7 @@ final class PlaybackControls {
     func command(at point: CGPoint) -> PlayerCommand? {
         guard isShown else { return nil }
         let local = layer.convert(point, from: layer.superlayer)
-        let r = Self.buttonDiameter / 2 + 6
+        let r = Self.spacing / 2
         for (command, button) in buttons {
             let dx = local.x - button.position.x, dy = local.y - button.position.y
             if dx * dx + dy * dy <= r * r { return command }
@@ -96,22 +75,23 @@ final class PlaybackControls {
         return nil
     }
 
-    /// Hovered button: its engraving catches a little more light.
+    /// The symbol under the pointer glows brighter.
     func highlight(_ command: PlayerCommand?) {
         CATransaction.begin()
         CATransaction.setAnimationDuration(0.15)
-        for (c, button) in buttons { button.opacity = c == command ? 1 : 0.82 }
+        for (c, button) in buttons {
+            button.opacity = c == command ? 1 : 0.75
+            button.shadowRadius = c == command ? 6 : 3
+        }
         CATransaction.commit()
     }
 
-    /// The button sinks into the plate for a moment.
     func pulse(_ command: PlayerCommand) {
         guard let button = buttons.first(where: { $0.command == command })?.layer else { return }
-        let press = CAKeyframeAnimation(keyPath: "transform.scale")
-        press.values = [1, 0.86, 1]
-        press.keyTimes = [0, 0.35, 1]
-        press.duration = 0.22
-        button.add(press, forKey: "press")
+        let flash = CAKeyframeAnimation(keyPath: "shadowRadius")
+        flash.values = [3, 12, 4]
+        flash.duration = 0.4
+        button.add(flash, forKey: "press")
     }
 
     private func updateGlyphs() {
@@ -121,89 +101,17 @@ final class PlaybackControls {
         ]
         CATransaction.begin()
         CATransaction.setDisableActions(true)
-        for (command, button) in buttons { button.contents = Self.engraved(names[command] ?? "circle") }
+        for (command, button) in buttons { button.contents = Self.lit(names[command] ?? "circle") }
         CATransaction.commit()
     }
 
-    /// A symbol cut into brass: dark recess with a thin light edge below it.
-    private static func engraved(_ name: String) -> CGImage? {
-        let config = NSImage.SymbolConfiguration(pointSize: 40, weight: .bold)
-        guard let base = NSImage(systemSymbolName: name, accessibilityDescription: nil)?
+    private static func lit(_ name: String) -> CGImage? {
+        let config = NSImage.SymbolConfiguration(pointSize: 40, weight: .medium)
+            .applying(NSImage.SymbolConfiguration(paletteColors: [NSColor(red: 1, green: 0.88, blue: 0.68, alpha: 1)]))
+        guard let image = NSImage(systemSymbolName: name, accessibilityDescription: nil)?
             .withSymbolConfiguration(config) else { return nil }
-        func tinted(_ color: NSColor) -> NSImage {
-            let img = NSImage(size: base.size)
-            img.lockFocus()
-            base.draw(in: NSRect(origin: .zero, size: base.size))
-            color.set()
-            NSRect(origin: .zero, size: base.size).fill(using: .sourceAtop)
-            img.unlockFocus()
-            return img
-        }
-        let highlight = tinted(NSColor(red: 1, green: 0.93, blue: 0.75, alpha: 0.55))
-        let recess = tinted(NSColor(red: 0.18, green: 0.11, blue: 0.04, alpha: 0.9))
-        let pad: CGFloat = 4
-        let size = CGSize(width: base.size.width + pad * 2, height: base.size.height + pad * 2)
-        return Placeholders.render(size: size, scale: 2) { _, r in
-            highlight.draw(in: CGRect(x: pad, y: pad + 1.6, width: base.size.width, height: base.size.height))
-            recess.draw(in: CGRect(x: pad, y: pad, width: base.size.width, height: base.size.height))
-        }
+        return Placeholders.render(size: image.size, scale: 2) { _, rect in image.draw(in: rect) }
     }
-
-    /// Brushed brass plate with a bevel and three slightly domed buttons.
-    private static let drawnPlate: CGImage? = {
-        let size = plateSize
-        return Placeholders.render(size: size, scale: 4) { ctx, r in
-            let srgb = CGColorSpace(name: CGColorSpace.sRGB)
-            let body = CGPath(roundedRect: r.insetBy(dx: 1, dy: 1), cornerWidth: 9, cornerHeight: 9, transform: nil)
-            ctx.addPath(body)
-            ctx.clip()
-            // Brass: warm vertical gradient...
-            let brass = [Placeholders.hex(0xD9B77A), Placeholders.hex(0xB48A4C), Placeholders.hex(0x8A6532)] as CFArray
-            if let g = CGGradient(colorsSpace: srgb, colors: brass, locations: [0, 0.45, 1]) {
-                ctx.drawLinearGradient(g, start: CGPoint(x: 0, y: r.minY), end: CGPoint(x: 0, y: r.maxY), options: [])
-            }
-            // ...with fine horizontal brushing.
-            var seed: UInt32 = 7
-            for y in stride(from: r.minY, to: r.maxY, by: 0.5) {
-                seed = seed &* 1_103_515_245 &+ 12_345
-                let a = CGFloat((seed >> 16) & 0xFF) / 255 * 0.09
-                ctx.setFillColor(NSColor(white: (seed & 1) == 0 ? 1 : 0, alpha: a).cgColor)
-                ctx.fill(CGRect(x: r.minX, y: y, width: r.width, height: 0.5))
-            }
-            // Lamp light from the right.
-            if let g = CGGradient(colorsSpace: srgb, colors: [NSColor(white: 0, alpha: 0.28).cgColor,
-                                                               NSColor(white: 1, alpha: 0.10).cgColor] as CFArray,
-                                  locations: [0, 1]) {
-                ctx.drawLinearGradient(g, start: CGPoint(x: r.minX, y: 0), end: CGPoint(x: r.maxX, y: 0), options: [])
-            }
-            // Buttons: a dark seat ring, then a domed brass cap.
-            for i in -1...1 {
-                let c = CGPoint(x: r.midX + CGFloat(i) * spacing, y: r.midY)
-                let rad = buttonDiameter / 2
-                ctx.setFillColor(Placeholders.hex(0x3A2810, alpha: 0.85))
-                ctx.fillEllipse(in: CGRect(x: c.x - rad - 1.5, y: c.y - rad - 1.5, width: (rad + 1.5) * 2, height: (rad + 1.5) * 2))
-                let cap = [Placeholders.hex(0xF0D9A6), Placeholders.hex(0xC29A5C), Placeholders.hex(0x8C6633)] as CFArray
-                if let g = CGGradient(colorsSpace: srgb, colors: cap, locations: [0, 0.5, 1]) {
-                    ctx.saveGState()
-                    ctx.addEllipse(in: CGRect(x: c.x - rad, y: c.y - rad, width: rad * 2, height: rad * 2))
-                    ctx.clip()
-                    ctx.drawRadialGradient(g, startCenter: CGPoint(x: c.x + rad * 0.3, y: c.y - rad * 0.35), startRadius: 0,
-                                           endCenter: c, endRadius: rad * 1.15, options: [.drawsAfterEndLocation])
-                    ctx.restoreGState()
-                }
-            }
-            ctx.resetClip()
-            // Bevel: light top edge, dark bottom edge.
-            ctx.addPath(body)
-            ctx.setStrokeColor(NSColor(red: 1, green: 0.92, blue: 0.75, alpha: 0.5).cgColor)
-            ctx.setLineWidth(1)
-            ctx.strokePath()
-            ctx.setStrokeColor(NSColor(red: 0.25, green: 0.16, blue: 0.06, alpha: 0.6).cgColor)
-            ctx.move(to: CGPoint(x: r.minX + 9, y: r.maxY - 1.5))
-            ctx.addLine(to: CGPoint(x: r.maxX - 9, y: r.maxY - 1.5))
-            ctx.strokePath()
-        }
-    }()
 }
 
 /// A paper tracklist taped to the wall showing what YouTube Music plays next. Click a line to play it.
@@ -216,7 +124,7 @@ final class UpNextCard {
     private var lightFrom = "right"
     private var hovered: Int?
 
-    static let maxRows = 5
+    static let maxRows = 4
     private static let header: CGFloat = 62
     private static let rowHeight: CGFloat = 46
     private static let padding: CGFloat = 22
@@ -235,10 +143,13 @@ final class UpNextCard {
         layer.addSublayer(highlightLayer)
     }
 
+    private var targetOpacity: Float = 1
+
     func configure(_ spec: SceneConfig.Layer, crate: SceneConfig.Crate?) {
         let rect = spec.rect
         shade = crate?.sleeveShade ?? 0
         lightFrom = crate?.lightFrom ?? "right"
+        targetOpacity = spec.opacity ?? 1
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         layer.bounds = CGRect(origin: .zero, size: rect.size)
@@ -259,7 +170,7 @@ final class UpNextCard {
         }
         CATransaction.begin()
         CATransaction.setAnimationDuration(0.4)
-        layer.opacity = visible && !items.isEmpty ? 1 : 0
+        layer.opacity = visible && !items.isEmpty ? targetOpacity : 0
         CATransaction.commit()
     }
 
@@ -376,7 +287,7 @@ final class UpNextCard {
     }
 }
 
-/// The current song set in type on the wall, blended into the plaster so it reads as painted lettering.
+/// The current song on a small museum-style wall label beside the leaning sleeve, as if the cover were framed art.
 @MainActor
 final class WallTitle {
     let layer = CALayer()
@@ -384,21 +295,28 @@ final class WallTitle {
     private var artist = ""
     private var visible = false
     private var shade: CGFloat = 0
+    private var lightFrom = "right"
 
     init() {
         layer.name = "now_playing"
         layer.contentsGravity = .resize
         layer.opacity = 0
+        layer.shadowColor = NSColor.black.cgColor
+        layer.shadowOpacity = 0.55
+        layer.shadowRadius = 3
+        layer.shadowOffset = CGSize(width: 2, height: 3)
     }
 
     func configure(_ spec: SceneConfig.Layer, crate: SceneConfig.Crate?) {
         let rect = spec.rect
         shade = crate?.sleeveShade ?? 0
+        lightFrom = crate?.lightFrom ?? "right"
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         layer.bounds = CGRect(origin: .zero, size: rect.size)
         layer.position = CGPoint(x: rect.midX, y: rect.midY)
-        layer.compositingFilter = Ambient.compositingFilter(spec.blend ?? "overlay")
+        layer.setAffineTransform(CGAffineTransform(rotationAngle: (spec.rotation ?? 0) * .pi / 180))
+        layer.compositingFilter = Ambient.compositingFilter(spec.blend)
         layer.setValue(spec.opacity ?? 1, forKey: "targetOpacity")
         CATransaction.commit()
         title = ""
@@ -412,12 +330,12 @@ final class WallTitle {
         artist = a
         let target = (layer.value(forKey: "targetOpacity") as? Float) ?? 1
         let shouldShow = show && !t.isEmpty
-        if changed {
+        if changed && !t.isEmpty {
             CATransaction.begin()
-            if animated {
+            if animated && visible {
                 let fade = CATransition()
                 fade.type = .fade
-                fade.duration = 1.0
+                fade.duration = 0.8
                 layer.add(fade, forKey: "contents")
             } else {
                 CATransaction.setDisableActions(true)
@@ -425,7 +343,7 @@ final class WallTitle {
             render()
             CATransaction.commit()
         }
-        guard shouldShow != visible || changed else { return }
+        guard shouldShow != visible else { return }
         visible = shouldShow
         CATransaction.begin()
         CATransaction.setAnimationDuration(animated ? 0.8 : 0)
@@ -436,50 +354,298 @@ final class WallTitle {
 
     private func render() {
         let size = layer.bounds.size
-        guard size.width > 0 else { return }
-        let title = self.title, artist = self.artist.uppercased()
-        guard !title.isEmpty else { layer.contents = nil; return }
-        layer.contents = Placeholders.render(size: size, scale: 3) { _, r in
-            let ink = NSColor(red: 0.98, green: 0.90, blue: 0.74, alpha: 1)
-            let center = NSMutableParagraphStyle()
-            center.alignment = .center
-            center.lineBreakMode = .byWordWrapping
-            center.lineHeightMultiple = 0.92
+        guard size.width > 0, !title.isEmpty else { return }
+        let title = self.title, artist = self.artist
+        let shade = self.shade, lightFrom = self.lightFrom
+        layer.contents = Placeholders.render(size: size, scale: 4) { ctx, r in
+            // Matte card stock.
+            ctx.setFillColor(Placeholders.hex(0xEDE7DB))
+            ctx.fill(r)
+            let pad: CGFloat = 11
+            let ink = NSColor(red: 0.13, green: 0.11, blue: 0.09, alpha: 1)
+            let grey = NSColor(red: 0.42, green: 0.38, blue: 0.33, alpha: 1)
+            let kickerFont = NSFont(name: "AvenirNext-DemiBold", size: 6.5) ?? .systemFont(ofSize: 6.5, weight: .semibold)
+            let artistFont = NSFont(name: "AvenirNext-Regular", size: 9.5) ?? .systemFont(ofSize: 9.5)
+            let left = NSMutableParagraphStyle()
+            left.lineBreakMode = .byTruncatingTail
 
-            // Largest size at which the title fits in two lines.
-            var fontSize: CGFloat = 64
-            var titleFont = NSFont(name: "Didot-Italic", size: fontSize) ?? .systemFont(ofSize: fontSize)
-            var titleRect = CGRect.zero
-            while fontSize > 22 {
-                titleFont = NSFont(name: "Didot-Italic", size: fontSize) ?? .systemFont(ofSize: fontSize)
-                titleRect = (title as NSString).boundingRect(
-                    with: CGSize(width: r.width, height: 1000), options: [.usesLineFragmentOrigin],
-                    attributes: [.font: titleFont, .paragraphStyle: center])
-                if titleRect.height <= fontSize * 2.05 && titleRect.height <= r.height - 46 { break }
-                fontSize -= 2
+            // Title: the largest size that fits in two lines.
+            let width = r.width - pad * 2
+            var size: CGFloat = 14
+            var titleFont = NSFont(name: "AvenirNext-DemiBold", size: size) ?? .boldSystemFont(ofSize: size)
+            var titleHeight: CGFloat = 0
+            let wrap = NSMutableParagraphStyle()
+            wrap.lineBreakMode = .byWordWrapping
+            while size > 9 {
+                titleFont = NSFont(name: "AvenirNext-DemiBold", size: size) ?? .boldSystemFont(ofSize: size)
+                titleHeight = (title as NSString).boundingRect(
+                    with: CGSize(width: width, height: 200), options: [.usesLineFragmentOrigin],
+                    attributes: [.font: titleFont, .paragraphStyle: wrap]).height
+                if titleHeight <= size * 2.6 { break }
+                size -= 1
             }
-            let artistFont = NSFont(name: "AvenirNext-Medium", size: 13) ?? .systemFont(ofSize: 13, weight: .medium)
-            let blockHeight = titleRect.height + 14 + 18
-            var y = (r.height - blockHeight) / 2
+            titleHeight = min(titleHeight, size * 2.6)
+
+            let block = 9 + titleHeight + 2 + 13
+            var y = max(pad - 2, (r.height - block) / 2)
+            ("NOW PLAYING" as NSString).draw(
+                with: CGRect(x: pad, y: y, width: width, height: 9), options: [.usesLineFragmentOrigin],
+                attributes: [.font: kickerFont, .foregroundColor: grey, .kern: 1.6])
+            y += 10
             (title as NSString).draw(
-                with: CGRect(x: 0, y: y, width: r.width, height: titleRect.height + 4),
+                with: CGRect(x: pad, y: y, width: width, height: titleHeight + 2),
                 options: [.usesLineFragmentOrigin, .truncatesLastVisibleLine],
-                attributes: [.font: titleFont, .foregroundColor: ink, .paragraphStyle: center])
-            y += titleRect.height + 8
-            // A short rule, then the artist in spaced capitals.
-            ink.withAlphaComponent(0.7).setFill()
-            NSRect(x: r.midX - 18, y: y, width: 36, height: 1).fill()
-            y += 8
+                attributes: [.font: titleFont, .foregroundColor: ink, .paragraphStyle: wrap])
+            y += titleHeight + 2
             if !artist.isEmpty {
-                let style = NSMutableParagraphStyle()
-                style.alignment = .center
-                style.lineBreakMode = .byTruncatingTail
                 (artist as NSString).draw(
-                    with: CGRect(x: 0, y: y, width: r.width, height: 18),
+                    with: CGRect(x: pad, y: y, width: width, height: 13),
                     options: [.usesLineFragmentOrigin, .truncatesLastVisibleLine],
-                    attributes: [.font: artistFont, .foregroundColor: ink.withAlphaComponent(0.85),
-                                 .paragraphStyle: style, .kern: 3.2])
+                    attributes: [.font: artistFont, .foregroundColor: grey, .paragraphStyle: left])
+            }
+
+            // Room light, darker away from the lamp.
+            if shade > 0, let g = CGGradient(
+                colorsSpace: CGColorSpace(name: CGColorSpace.sRGB),
+                colors: [NSColor.black.withAlphaComponent(min(0.85, shade * 1.25)).cgColor,
+                         NSColor.black.withAlphaComponent(min(0.85, shade * 0.6)).cgColor] as CFArray,
+                locations: [0, 1]) {
+                let fromLeft = lightFrom == "left"
+                ctx.drawLinearGradient(g, start: CGPoint(x: fromLeft ? r.maxX : r.minX, y: r.midY),
+                                       end: CGPoint(x: fromLeft ? r.minX : r.maxX, y: r.midY), options: [])
             }
         }
+    }
+}
+
+/// The vintage receiver sitting in the console: its amber display shows the song, and three of its knobs are
+/// previous / play-pause / next. The receiver itself is part of the room photo; this draws only the live parts.
+@MainActor
+final class ReceiverOverlay {
+    let layer = CALayer()
+    private let display = CALayer()           // clips the text
+    private let text = CALayer()              // title + artist, may scroll
+    private let stateGlyph = CALayer()
+    private var knobs: [(command: PlayerCommand, center: CGPoint, radius: CGFloat, ring: CAShapeLayer, press: CALayer)] = []
+    private var labels: [CALayer] = []
+    private var displayRect = CGRect.zero
+    private var title = ""
+    private var artist = ""
+    private var isPlaying = false
+    private var flashing = false
+    private(set) var isConfigured = false
+    var controlsEnabled = true {
+        didSet { labels.forEach { $0.opacity = controlsEnabled ? 1 : 0 }; if !controlsEnabled { highlight(nil) } }
+    }
+    var showsTitle = true {
+        didSet { if showsTitle != oldValue { renderText() } }
+    }
+
+    private static let amber = NSColor(red: 1.0, green: 0.71, blue: 0.32, alpha: 1)
+
+    init() {
+        layer.name = "receiver"
+        display.masksToBounds = true
+        layer.addSublayer(display)
+        display.addSublayer(text)
+        for l in [text, stateGlyph] {
+            l.contentsGravity = .resize
+            l.shadowColor = Self.amber.cgColor
+            l.shadowOpacity = 0.9
+            l.shadowRadius = 2.2
+            l.shadowOffset = .zero
+        }
+        layer.addSublayer(stateGlyph)
+    }
+
+    func configure(_ spec: SceneConfig.Receiver, canvas: CGSize) {
+        let d = spec.display
+        displayRect = CGRect(x: d[0], y: d[1], width: d[2], height: d[3])
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        layer.frame = CGRect(origin: .zero, size: canvas)
+        display.frame = displayRect.insetBy(dx: 3, dy: 2)
+        let g = displayRect.height * 0.26
+        stateGlyph.frame = CGRect(x: displayRect.minX + 4, y: displayRect.minY + 4, width: g, height: g)
+        knobs.forEach { $0.ring.removeFromSuperlayer(); $0.press.removeFromSuperlayer() }
+        labels.forEach { $0.removeFromSuperlayer() }
+        knobs = []
+        labels = []
+        let commands: [PlayerCommand] = [.previous, .playPause, .next]
+        let marks = ["backward.fill", "playpause.fill", "forward.fill"]
+        for (i, k) in spec.knobs.prefix(3).enumerated() where k.count >= 3 {
+            let center = CGPoint(x: k[0], y: k[1]), r = k[2]
+            let ring = CAShapeLayer()
+            ring.path = CGPath(ellipseIn: CGRect(x: center.x - r - 2, y: center.y - r - 2, width: (r + 2) * 2, height: (r + 2) * 2), transform: nil)
+            ring.fillColor = nil
+            ring.strokeColor = Self.amber.withAlphaComponent(0.85).cgColor
+            ring.lineWidth = 1.2
+            ring.shadowColor = Self.amber.cgColor
+            ring.shadowOpacity = 1
+            ring.shadowRadius = 4
+            ring.shadowOffset = .zero
+            ring.opacity = 0
+            let press = CALayer()
+            press.frame = CGRect(x: center.x - r, y: center.y - r, width: r * 2, height: r * 2)
+            press.cornerRadius = r
+            press.backgroundColor = NSColor.black.cgColor
+            press.opacity = 0
+            layer.addSublayer(press)
+            layer.addSublayer(ring)
+            // A tiny printed legend above the knob, like the labels on real hi-fi gear.
+            let label = CALayer()
+            let lw: CGFloat = 9, lh: CGFloat = 5
+            label.frame = CGRect(x: center.x - lw / 2, y: center.y - r - lh - 2.5, width: lw, height: lh)
+            label.contents = Self.legend(marks[i])
+            label.contentsGravity = .resizeAspect
+            label.opacity = controlsEnabled ? 1 : 0
+            layer.addSublayer(label)
+            labels.append(label)
+            knobs.append((commands[i], center, r, ring, press))
+        }
+        CATransaction.commit()
+        isConfigured = true
+        renderText()
+    }
+
+    var hitRect: CGRect {
+        guard isConfigured, controlsEnabled else { return .zero }
+        return knobs.reduce(CGRect.null) { $0.union(CGRect(x: $1.center.x - $1.radius - 6, y: $1.center.y - $1.radius - 10,
+                                                          width: ($1.radius + 6) * 2, height: ($1.radius + 8) * 2)) }
+    }
+
+    func command(at point: CGPoint) -> PlayerCommand? {
+        guard controlsEnabled else { return nil }
+        for k in knobs {
+            let dx = point.x - k.center.x, dy = point.y - k.center.y
+            if dx * dx + dy * dy <= (k.radius + 5) * (k.radius + 5) { return k.command }
+        }
+        return nil
+    }
+
+    func highlight(_ command: PlayerCommand?) {
+        CATransaction.begin()
+        CATransaction.setAnimationDuration(0.18)
+        for k in knobs { k.ring.opacity = k.command == command ? 1 : 0 }
+        CATransaction.commit()
+    }
+
+    /// The knob sinks for a moment and the display confirms the action.
+    func press(_ command: PlayerCommand) {
+        guard let k = knobs.first(where: { $0.command == command }) else { return }
+        let sink = CAKeyframeAnimation(keyPath: "opacity")
+        sink.values = [0, 0.45, 0]
+        sink.duration = 0.3
+        k.press.add(sink, forKey: "press")
+        let word: String
+        switch command {
+        case .previous: word = "◂◂  PREV"
+        case .next: word = "NEXT  ▸▸"
+        default: word = isPlaying ? "❚❚  PAUSE" : "▶  PLAY"
+        }
+        flashing = true
+        setText(Self.renderLines(word, nil, width: display.bounds.width, height: display.bounds.height), scroll: false)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.1) { [weak self] in
+            self?.flashing = false
+            self?.renderText()
+        }
+    }
+
+    func set(title newTitle: String?, artist newArtist: String?, playing: Bool) {
+        let t = newTitle ?? "", a = newArtist ?? ""
+        let changed = t != title || a != artist || playing != isPlaying
+        title = t
+        artist = a
+        isPlaying = playing
+        if changed { renderText() }
+    }
+
+    private func renderText() {
+        guard isConfigured, !flashing else { return }
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        stateGlyph.contents = title.isEmpty ? nil : Self.glyph(isPlaying ? "play.fill" : "pause.fill")
+        CATransaction.commit()
+        let w = display.bounds.width, h = display.bounds.height
+        if title.isEmpty || !showsTitle {
+            setText(Self.renderLines("33⅓ RPM", nil, width: w, height: h, dim: true), scroll: false)
+        } else {
+            setText(Self.renderLines(title.uppercased(), artist.uppercased(), width: w, height: h), scroll: true)
+        }
+    }
+
+    private func setText(_ rendered: (image: CGImage?, width: CGFloat), scroll: Bool) {
+        let w = display.bounds.width, h = display.bounds.height
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        text.removeAnimation(forKey: "marquee")
+        let fadeIn = CATransition()
+        fadeIn.type = .fade
+        fadeIn.duration = 0.25
+        text.add(fadeIn, forKey: "contents")
+        text.contents = rendered.image
+        let tw = max(w, rendered.width)
+        text.frame = CGRect(x: 0, y: 0, width: tw, height: h)
+        CATransaction.commit()
+        // Long titles drift across slowly, pausing at each end.
+        guard scroll, tw > w + 1 else { return }
+        let travel = tw - w
+        let move = Double(travel / 14)
+        let hold = 2.2
+        let total = hold + move + hold + move
+        let anim = CAKeyframeAnimation(keyPath: "position.x")
+        let start = tw / 2, end = tw / 2 - travel
+        anim.values = [start, start, end, end, start]
+        anim.keyTimes = [0, NSNumber(value: hold / total), NSNumber(value: (hold + move) / total),
+                         NSNumber(value: (hold + move + hold) / total), 1]
+        anim.duration = total
+        anim.repeatCount = .infinity
+        text.add(anim, forKey: "marquee")
+    }
+
+    /// Glowing amber capitals, title above artist. Returns the text's full width for scrolling.
+    private static func renderLines(_ line1: String, _ line2: String?, width: CGFloat, height: CGFloat,
+                                    dim: Bool = false) -> (image: CGImage?, width: CGFloat) {
+        let titleSize = height * (line2 == nil ? 0.36 : 0.34)
+        let artistSize = height * 0.2
+        let titleFont = NSFont.monospacedSystemFont(ofSize: titleSize, weight: .semibold)
+        let artistFont = NSFont.monospacedSystemFont(ofSize: artistSize, weight: .medium)
+        let color = amber.withAlphaComponent(dim ? 0.45 : 0.95)
+        let a1: [NSAttributedString.Key: Any] = [.font: titleFont, .foregroundColor: color, .kern: titleSize * 0.08]
+        let a2: [NSAttributedString.Key: Any] = [.font: artistFont, .foregroundColor: color.withAlphaComponent(dim ? 0.4 : 0.7),
+                                                 .kern: artistSize * 0.15]
+        let pad = height * 0.42   // leaves room for the play/pause glyph on the left
+        let w1 = (line1 as NSString).size(withAttributes: a1).width
+        let w2 = line2.map { ($0 as NSString).size(withAttributes: a2).width } ?? 0
+        let textWidth = max(w1, w2) + pad + 6
+        let fits = textWidth <= width
+        let total = fits ? width : textWidth
+        let image = Placeholders.render(size: CGSize(width: total, height: height), scale: 4) { _, r in
+            let x = fits && line2 == nil ? (r.width - w1) / 2 : pad
+            if let line2 {
+                (line1 as NSString).draw(at: CGPoint(x: x, y: r.height * 0.1), withAttributes: a1)
+                (line2 as NSString).draw(at: CGPoint(x: x, y: r.height * 0.58), withAttributes: a2)
+            } else {
+                (line1 as NSString).draw(at: CGPoint(x: x, y: (r.height - titleSize * 1.25) / 2), withAttributes: a1)
+            }
+        }
+        return (image, total)
+    }
+
+    private static func glyph(_ name: String) -> CGImage? {
+        let config = NSImage.SymbolConfiguration(pointSize: 30, weight: .bold)
+            .applying(NSImage.SymbolConfiguration(paletteColors: [amber.withAlphaComponent(0.9)]))
+        guard let img = NSImage(systemSymbolName: name, accessibilityDescription: nil)?.withSymbolConfiguration(config)
+        else { return nil }
+        return Placeholders.render(size: img.size, scale: 2) { _, r in img.draw(in: r) }
+    }
+
+    /// Small light-grey symbol, like silkscreen printing on brushed aluminium.
+    private static func legend(_ name: String) -> CGImage? {
+        let config = NSImage.SymbolConfiguration(pointSize: 30, weight: .semibold)
+            .applying(NSImage.SymbolConfiguration(paletteColors: [NSColor(white: 0.92, alpha: 0.75)]))
+        guard let img = NSImage(systemSymbolName: name, accessibilityDescription: nil)?.withSymbolConfiguration(config)
+        else { return nil }
+        return Placeholders.render(size: img.size, scale: 2) { _, r in img.draw(in: r) }
     }
 }

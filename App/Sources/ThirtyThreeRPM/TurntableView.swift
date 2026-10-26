@@ -33,6 +33,7 @@ final class TurntableView: NSView {
     private let controls = PlaybackControls()
     private let upNext = UpNextCard()
     private let wallTitle = WallTitle()
+    private let receiver = ReceiverOverlay()
     private var queue: [QueueItem] = []
     /// The turntable's footprint on screen (canvas points): hovering shows the controls, clicking plays/pauses.
     private var turntableRect = CGRect.zero
@@ -42,10 +43,16 @@ final class TurntableView: NSView {
         didSet { if rpmOverride != oldValue, spinning { restartSpinLoop() } }
     }
     var showsControls = true {
-        didSet { controls.setShown(showsControls) }
+        didSet {
+            if !showsControls { controls.setShown(false) }
+            receiver.controlsEnabled = showsControls
+        }
     }
     var showsTitle = true {
-        didSet { if showsTitle != oldValue { wallTitle.set(title: input.title, artist: input.artist, visible: showsTitle, animated: true) } }
+        didSet {
+            receiver.showsTitle = showsTitle
+            if showsTitle != oldValue { wallTitle.set(title: input.title, artist: input.artist, visible: showsTitle, animated: true) }
+        }
     }
     var showsUpNext = true {
         didSet { if showsUpNext != oldValue { upNext.setItems(queue, visible: showsUpNext) } }
@@ -174,6 +181,12 @@ final class TurntableView: NSView {
         }
         configureControls(scene.config)
         root.addSublayer(controls.layer)
+        if let spec = scene.config.receiver {
+            receiver.configure(spec, canvas: scene.config.canvasSize)
+            receiver.controlsEnabled = showsControls
+            receiver.showsTitle = showsTitle
+            root.addSublayer(receiver.layer)
+        }
         root.addSublayer(crate.caption)
         CATransaction.commit()
         upNext.setItems(queue, visible: showsUpNext)
@@ -200,9 +213,8 @@ final class TurntableView: NSView {
         let center = config.controls?.center.flatMap { $0.count == 2 ? CGPoint(x: $0[0], y: $0[1]) : nil }
             ?? CGPoint(x: d.center[0], y: d.center[1] + h / 2 + 60)
         controls.configure(center: center, scale: config.controls?.scale ?? 1,
-                           shade: config.crate?.sleeveShade ?? 0, lightFrom: config.crate?.lightFrom ?? "right")
-        controls.setPlate(scene?.controlPlate)
-        controls.setShown(showsControls)
+                           rotation: config.controls?.rotation ?? 0)
+        controls.setShown(false)
     }
 
     func setQueue(_ items: [QueueItem]) {
@@ -394,6 +406,7 @@ final class TurntableView: NSView {
         crate.setWall(input.label, animated: animated)
         controls.setPlaying(input.isPlaying)
         wallTitle.set(title: input.title, artist: input.artist, visible: showsTitle, animated: animated)
+        receiver.set(title: input.title, artist: input.artist, playing: input.isPlaying)
 
         let wantedLabel = input.label ?? scene.defaultLabel
         if wantedLabel !== shownLabel {
@@ -452,7 +465,7 @@ final class TurntableView: NSView {
     func isInteractive(at point: CGPoint) -> Bool {
         let p = canvasPoint(point)
         return turntableRect.contains(p) || (controls.isShown && controls.frame.insetBy(dx: -12, dy: -12).contains(p))
-            || upNext.hitRect.contains(p) || crate.hitRect.contains(p)
+            || upNext.hitRect.contains(p) || crate.hitRect.contains(p) || receiver.hitRect.contains(p)
     }
 
     /// For snapshots: show the controls as if hovered.
@@ -467,7 +480,8 @@ final class TurntableView: NSView {
     /// Pointer left everything interactive.
     func endBrowse() {
         crate.endBrowse()
-        controls.highlight(nil)
+        controls.setShown(false)
+        receiver.highlight(nil)
         upNext.hover(at: nil)
     }
 
@@ -489,7 +503,10 @@ final class TurntableView: NSView {
     func click(at point: CGPoint) {
         hover(at: point)
         let p = canvasPoint(point)
-        if let command = controls.command(at: p) {
+        if let command = receiver.command(at: p) {
+            receiver.press(command)
+            onCommand?(command)
+        } else if let command = controls.command(at: p) {
             controls.pulse(command)
             onCommand?(command)
         } else if let item = upNext.item(at: p) {
@@ -506,6 +523,8 @@ final class TurntableView: NSView {
         let p = canvasPoint(point)
         crate.hover(at: p)
         upNext.hover(at: p)
+        controls.setShown(showsControls && !receiver.isConfigured && turntableRect.contains(p))
+        receiver.highlight(receiver.command(at: p))
         controls.highlight(controls.command(at: p))
     }
 

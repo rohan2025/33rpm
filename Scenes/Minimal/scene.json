@@ -1,14 +1,16 @@
 {
   "canvas": [1500, 1000],
   "edgeFade": 200,
-  "controls": { "center": [482, 602], "scale": 0.82 },
+  "receiver": {
+    "display": [747, 606, 101, 34],
+    "knobs": [[759.4, 674.4, 9.8], [793.2, 671.2, 9.8], [841.6, 664.6, 9.8]]
+  },
   "focus": [700, 450],
 
   "layers": [
     { "slot": "background",    "frame": [0, 0, 1500, 1000] },
     { "slot": "video",         "frame": [0, 0, 1500, 1000], "blend": "screen", "opacity": 0.6 },
-    { "slot": "up_next",       "frame": [478, 64, 290, 300], "rotation": 1.5 },
-    { "slot": "now_playing",   "frame": [800, 112, 370, 168], "blend": "overlay" },
+    { "slot": "up_next",       "frame": [500, 96, 262, 262], "rotation": 1.5, "opacity": 0.9 },
     { "slot": "sleeve_shadow", "frame": [814, 288, 142, 142], "opacity": 0.8 },
     { "slot": "sleeve",        "frame": [814, 294, 128, 128], "rotation": -2 },
     { "slot": "crate",         "frame": [986, 373, 166, 71] },

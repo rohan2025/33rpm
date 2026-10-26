@@ -109,3 +109,10 @@ PNG → **Quick Actions → Remove Background** (macOS 14+).
 3. Adjust the `record` and `tonearm` frames inside `deck.layers` until the record sits on the platter
    and the tonearm pivot sits where the painted arm base would be. Use `tonearm.startAngle` / `endAngle`
    so the stylus starts at the outer edge and ends just outside the label.
+
+## The receiver
+
+The vintage receiver in the console was generated with FLUX.1 Kontext (edit: "inside the open middle shelf of the
+console, place a vintage 1970s hi-fi receiver…"), cut out to `Assets/receiver_patch.png` with its display blanked,
+and composited into each room by `scripts/composite_receiver.py`. If you replace a room photo, rerun the script
+or remove the `receiver` block from that scene's scene.json.

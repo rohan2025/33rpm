@@ -83,10 +83,20 @@ struct SceneConfig: Decodable {
     struct Controls: Decodable {
         var center: [CGFloat]?
         var scale: CGFloat?
+        /// Degrees, to follow the turntable's edge.
+        var rotation: CGFloat?
+    }
+
+    /// The receiver in the room photo: its display window [x, y, w, h] and three knobs [x, y, radius]
+    /// (previous, play/pause, next), in canvas points.
+    struct Receiver: Decodable {
+        var display: [CGFloat]
+        var knobs: [[CGFloat]]
     }
 
     var canvas: [CGFloat]
     var controls: Controls?
+    var receiver: Receiver?
     /// Canvas point kept in view when the scene is cropped to fill a screen of a different shape.
     var focus: [CGFloat]?
     var crate: Crate?
@@ -118,8 +128,6 @@ struct LoadedScene {
     var images: [String: CGImage]
     var defaultLabel: CGImage
     var defaultSleeve: CGImage
-    /// Optional photographed brass faceplate for the controls (control_plate.png).
-    var controlPlate: CGImage? = nil
 }
 
 extension SceneID {
@@ -196,8 +204,7 @@ enum SceneLibrary {
         }
         let label = image(named: "default_label", in: id.folderName) ?? Placeholders.defaultLabel()
         let sleeve = image(named: "default_sleeve", in: id.folderName) ?? Placeholders.defaultSleeve()
-        return LoadedScene(id: id, config: config, images: images, defaultLabel: label, defaultSleeve: sleeve,
-                           controlPlate: image(named: "control_plate", in: id.folderName))
+        return LoadedScene(id: id, config: config, images: images, defaultLabel: label, defaultSleeve: sleeve)
     }
 
     static func image(named slot: String, in folder: String) -> CGImage? {
