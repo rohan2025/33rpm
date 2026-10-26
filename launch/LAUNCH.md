@@ -6,8 +6,7 @@ Everything below is a draft: edit freely before posting. Images are in this fold
 
 - [ ] Record a 15–30 s screen video (shot list below). This is the single most important asset.
 - [ ] Build the release: `scripts/package.sh` → `build/release/33rpm-1.0.0.dmg` and `33rpm-bridge-1.0.0.zip`.
-- [ ] Decide where people download it. Simplest: a GitHub repo with the DMG attached to a Release.
-      (Pick a license first; MIT is the usual choice for a fun open project.)
+- [x] Download page: https://github.com/rohan2025/33rpm/releases/latest (public repo, MIT license, v1.0.0 DMG attached).
 - [ ] Optional: submit `33rpm-bridge-1.0.0.zip` to the Chrome Web Store ($5 one-time developer fee, review takes a few days)
       so people can install the extension with one click instead of "Load unpacked".
 - [ ] Optional: Apple Developer Program ($99/yr) + notarization removes the "can't verify developer" warning.
@@ -46,7 +45,7 @@ Tip: export at 1080p, trim in QuickTime (Cmd+T), keep it silent or add a short m
    > • dust drifts in the lamp light 🕯️
 2. > Click the turntable to pause, click a song on the "Up Next" card on the wall to jump to it. Three rooms: Evening, Rainy Window, Minimal.
 3. > How it works: a tiny Chrome extension reads what YouTube Music is playing and sends it to a native Swift app over localhost. No accounts, no analytics, ~0% CPU (it's all Core Animation).
-4. > Download (macOS 14+): [link]
+4. > Download (macOS 14+, free): https://github.com/rohan2025/33rpm
 
 ## Product Hunt
 
@@ -58,6 +57,7 @@ Tip: export at 1080p, trim in QuickTime (Cmd+T), keep it silent or add a short m
 - **Thumbnail:** `ph-thumbnail-240.png`
 - **Gallery (1270×760, these are 2× so they stay sharp):** `1-evening.jpg`, `2-crate-browse.jpg`, `3-rainy-window.jpg`, `4-minimal.jpg`, `5-idle.jpg`, plus the video.
 - **Pricing:** Free
+- **Links:** Website / download: https://github.com/rohan2025/33rpm
 - **Maker's first comment:**
   > Hi Product Hunt 👋 I listen to YouTube Music all day and missed the ritual of a record player, so I built one into my desktop.
   >

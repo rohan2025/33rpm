@@ -12,7 +12,8 @@ music.youtube.com tab ──► Chrome extension (MV3) ──ws://127.0.0.1:3333
 
 ## Install (for everyone)
 
-1. Download `33rpm-1.0.0.dmg`, drag **33rpm** into Applications and open it.
+1. Download **[33rpm-1.0.0.dmg](https://github.com/rohan2025/33rpm/releases/latest)** from the latest release,
+   drag **33rpm** into Applications and open it.
    It's a free hobby app and isn't notarized, so macOS will block it the first time:
    open **System Settings → Privacy & Security**, scroll down and click **Open Anyway**.
 2. The **Setup Guide** opens on first launch (also in the menu bar). It has buttons to show the
@@ -206,3 +207,8 @@ App/                Swift package for the macOS app
 Scenes/             Scene folders: scene.json + your PNG layers
 scripts/            build_app.sh
 ```
+
+## License
+
+MIT, see [LICENSE](LICENSE). The room art, record, tonearm, crate and sleeve images were generated for this
+project with ChatGPT.
