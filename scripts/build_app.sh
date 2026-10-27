@@ -27,8 +27,8 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
     <key>CFBundleDisplayName</key>       <string>33rpm</string>
     <key>CFBundleExecutable</key>        <string>33rpm</string>
     <key>CFBundlePackageType</key>       <string>APPL</string>
-    <key>CFBundleShortVersionString</key><string>1.2.0</string>
-    <key>CFBundleVersion</key>           <string>3</string>
+    <key>CFBundleShortVersionString</key><string>1.2.1</string>
+    <key>CFBundleVersion</key>           <string>4</string>
     <key>LSMinimumSystemVersion</key>    <string>14.0</string>
     <key>NSHighResolutionCapable</key>   <true/>
     <key>LSUIElement</key>               <true/>

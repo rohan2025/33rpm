@@ -2,7 +2,7 @@ import AppKit
 import Metal
 import QuartzCore
 
-/// `33rpm --snapshot out.png [--scene evening] [--playing] [--progress 0.4] [--width 1500] [--height 844]`
+/// `33rpm --snapshot out.png [--scene evening] [--playing] [--title T] [--artist A] [--progress 0.4] [--width 1500] [--height 844]`
 /// Renders the scene offscreen with CARenderer (which, unlike `render(in:)`, handles the 3D deck tilt)
 /// and exits. Handy for checking scene.json edits without looking at the desktop.
 @MainActor
@@ -94,9 +94,14 @@ enum Snapshot {
         }
         // remaining 0: static arm, no sweep animation
         let label = playing && demoHistory > 0 ? (art.first?.image ?? demoArt(hue: 0.55)) : nil
-        let nowTitle = playing && demoHistory > 0 ? (art.first?.title ?? "Demo Track") : nil
+        let args = CommandLine.arguments
+        func value(_ flag: String) -> String? {
+            args.firstIndex(of: flag).flatMap { $0 + 1 < args.count ? args[$0 + 1] : nil }
+        }
+        let nowTitle = value("--title") ?? (playing && demoHistory > 0 ? (art.first?.title ?? "Demo Track") : nil)
+        let nowArtist = value("--artist").map { $0.isEmpty ? nil : $0 } ?? (nowTitle == nil ? nil : "Mira Sol")
         view.apply(PlaybackInput(isPlaying: playing, progress: progress, remaining: 0, label: label,
-                                 title: nowTitle, artist: nowTitle == nil ? nil : "Mira Sol"), animated: false)
+                                 title: nowTitle, artist: nowArtist), animated: false)
         if flyAt != nil, let newest = demo.first {
             // Show the newest sleeve mid-flight from the wall into the crate.
             view.setHistory(Array(demo.dropFirst()), animated: false)

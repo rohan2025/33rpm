@@ -144,13 +144,30 @@ final class TurntableView: NSView {
         for spec in scene.config.layers {
             if spec.slot == "sleeve", spec.frame != nil, spec.hidden != true {
                 crate.configureWall(spec)
-                root.addSublayer(crate.wall)
+                root.addSublayer(crate.castShadow)
+                // Flat container: the sleeve leans back in 3D, and would otherwise be sliced by the background.
+                let holder = CALayer()
+                holder.frame = CGRect(origin: .zero, size: scene.config.canvasSize)
+                holder.addSublayer(crate.wall)
+                root.addSublayer(holder)
                 continue
             }
             if spec.slot == "crate", spec.frame != nil, spec.hidden != true {
                 // Sleeves stand behind the crate's front panel.
                 crate.configureCrate(spec, canvas: scene.config.canvasSize)
+                root.addSublayer(crate.crateShadow)
+                root.addSublayer(crate.crateBack)
                 root.addSublayer(crate.stack)
+                if let layer = makeLayer(spec, image: scene.images[spec.slot]) {
+                    // The side is drawn in perspective; a flat container keeps it from being depth-sorted.
+                    let holder = CALayer()
+                    holder.frame = CGRect(origin: .zero, size: scene.config.canvasSize)
+                    holder.addSublayer(crate.crateSide)
+                    root.addSublayer(holder)
+                    root.addSublayer(layer)
+                    crate.settle(layer)
+                }
+                continue
             }
             if spec.slot == "now_playing", spec.frame != nil, spec.hidden != true {
                 wallTitle.configure(spec, crate: scene.config.crate)

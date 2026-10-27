@@ -66,6 +66,11 @@ struct SceneConfig: Decodable {
         var sleeveShade: CGFloat = 0
         /// Where the room's light comes from: "left", "right" or "none".
         var lightFrom: String = "right"
+        /// Colour of the room's light on the sleeves' print, [r, g, b]. Default: warm lamp light.
+        var tint: [CGFloat]?
+        /// Degrees the wall and console turn away from the camera in the photo (positive: the right side is
+        /// further away). The sleeve leaning on the wall turns with them so it sits in the room.
+        var yaw: CGFloat = 0
 
         init() {}
         init(from decoder: Decoder) throws {
@@ -75,8 +80,10 @@ struct SceneConfig: Decodable {
             browseLift = try c.decodeIfPresent(CGFloat.self, forKey: .browseLift) ?? browseLift
             sleeveShade = try c.decodeIfPresent(CGFloat.self, forKey: .sleeveShade) ?? sleeveShade
             lightFrom = try c.decodeIfPresent(String.self, forKey: .lightFrom) ?? lightFrom
+            tint = try c.decodeIfPresent([CGFloat].self, forKey: .tint)
+            yaw = try c.decodeIfPresent(CGFloat.self, forKey: .yaw) ?? yaw
         }
-        private enum CodingKeys: String, CodingKey { case sleeveSize, peek, browseLift, sleeveShade, lightFrom }
+        private enum CodingKeys: String, CodingKey { case sleeveSize, peek, browseLift, sleeveShade, lightFrom, tint, yaw }
     }
 
     /// Where the hover playback controls sit (canvas point). Default: just in front of the deck.
@@ -92,6 +99,10 @@ struct SceneConfig: Decodable {
     struct Receiver: Decodable {
         var display: [CGFloat]
         var knobs: [[CGFloat]]
+        /// The display window's four corners as the photo shows them, [x, y] each: top-left, top-right,
+        /// bottom-right, bottom-left. The receiver is seen at an angle, so its window isn't a rectangle; the
+        /// display glass and text are drawn in this shape. Without it, `display` is used as a flat rectangle.
+        var window: [[CGFloat]]?
     }
 
     var canvas: [CGFloat]

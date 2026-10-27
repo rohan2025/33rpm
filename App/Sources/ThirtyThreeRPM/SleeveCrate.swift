@@ -24,7 +24,9 @@ final class SleeveCrate {
     /// Room lighting over the wall sleeve.
     private let wallShade = CAGradientLayer()
 
-    /// The `sleeve_shadow` layer; it leaves and returns with the wall sleeve.
+    /// The soft shadow the wall sleeve casts on the wall and console; add it just below `wall`.
+    let castShadow = CALayer()
+    /// The scene's own `sleeve_shadow` layer, if it has one; it leaves and returns with the wall sleeve.
     private weak var wallShadow: CALayer?
     private var wallShadowOpacity: Float = 1
     private var wallFrame = CGRect.zero
@@ -51,11 +53,12 @@ final class SleeveCrate {
         for layer in [wall, caption] { layer.actions = ["position": NSNull(), "bounds": NSNull()] }
         wall.contentsGravity = .resizeAspectFill
         wall.masksToBounds = true
-        wall.borderWidth = 1
-        wall.borderColor = NSColor(white: 1, alpha: 0.12).cgColor
-        wall.cornerRadius = 2
+        wall.cornerRadius = 1
         wall.name = "sleeve"
         wall.addSublayer(wallShade)
+        castShadow.actions = ["position": NSNull(), "bounds": NSNull()]
+        castShadow.name = "sleeve_cast_shadow"
+        castShadow.contentsGravity = .resize
 
         caption.backgroundColor = NSColor(white: 0.05, alpha: 0.72).cgColor
         caption.cornerRadius = 10
@@ -86,12 +89,31 @@ final class SleeveCrate {
         wallRotation = (spec.rotation ?? 0) * .pi / 180
         withoutAnimation {
             wall.bounds = CGRect(origin: .zero, size: wallFrame.size)
-            wall.position = CGPoint(x: wallFrame.midX, y: wallFrame.midY)
-            wall.setAffineTransform(CGAffineTransform(rotationAngle: wallRotation))
+            // Leaning back against the wall: the top edge sits further away than the bottom, which stands on
+            // the console. Tilting it back shortens it a little, so drop it to keep the bottom edge in place.
+            let lean: CGFloat = 16 * .pi / 180
+            wall.position = CGPoint(x: wallFrame.midX, y: wallFrame.midY + wallFrame.height * (1 - cos(lean)) / 2)
+            var t = roomTransform
+            t = CATransform3DRotate(t, wallRotation, 0, 0, 1)
+            t = CATransform3DRotate(t, lean, 1, 0, 0)
+            wall.transform = t
             wall.opacity = spec.opacity ?? 1
-            wall.contents = shownWall ?? defaultSleeve
+            wall.contents = printed(shownWall ?? defaultSleeve)
+            // Leaning on the wall, lit from one side: a soft shadow falls away from the light onto the wall,
+            // and a tight dark line where the bottom edge meets the console.
+            let size = wallFrame.size
+            let away: CGFloat = settings.lightFrom == "left" ? 1 : (settings.lightFrom == "none" ? 0 : -1)
+            let blur = size.width * 0.06
+            let pad = blur * 3
+            castShadow.bounds = CGRect(x: 0, y: 0, width: size.width + pad * 2, height: size.height + pad * 2)
+            castShadow.position = CGPoint(x: wall.position.x + away * size.width * 0.07, y: wall.position.y + size.height * 0.02)
+            castShadow.setAffineTransform(CGAffineTransform(rotationAngle: wallRotation))
+            castShadow.contents = SleevePrint.shadow(size: size, blur: blur, pad: pad, contactOffset: away * size.width * 0.07)
             wallShade.frame = wall.bounds
-            applyLighting(to: wallShade, darkness: settings.sleeveShade)
+            applyLighting(to: wallShade, darkness: settings.sleeveShade * 0.8)
+            // The lamp is above as well as to the side: light falls across the sleeve diagonally.
+            wallShade.startPoint = CGPoint(x: 0, y: 1)
+            wallShade.endPoint = CGPoint(x: 1, y: 0)
         }
     }
 
@@ -108,15 +130,87 @@ final class SleeveCrate {
         shade.endPoint = CGPoint(x: 1, y: 0.5)
     }
 
+    private var look: SleevePrint.Look {
+        SleevePrint.Look(tint: settings.tint ?? [1, 0.84, 0.7], lightFrom: settings.lightFrom)
+    }
+
+    /// Album art as a printed sleeve in this room. The scene's own default sleeve is already a photo, so it's left alone.
+    private func printed(_ image: CGImage?) -> CGImage? {
+        guard let image, image !== defaultSleeve else { return image }
+        return SleevePrint.make(image, look: look)
+    }
+
     func attachShadow(_ layer: CALayer) {
         wallShadow = layer
         wallShadowOpacity = layer.opacity
+    }
+
+    /// Perspective plus the room's turn, applied about each layer's anchor.
+    private var roomTransform: CATransform3D {
+        var t = CATransform3DIdentity
+        t.m34 = -1 / 600
+        return CATransform3DRotate(t, settings.yaw * .pi / 180, 0, 1, 0)
+    }
+
+    /// The crate's soft shadow on the wall and its contact line on the console; add it below the crate and stack.
+    let crateShadow = CALayer()
+    /// The crate's far wall, seen over the front one because the camera looks down at the console; add it
+    /// behind the stack.
+    let crateBack = CALayer()
+    /// The crate's left side, seen because the camera is off to the left; add it between the stack and the front.
+    let crateSide = CALayer()
+
+    /// Grounds the crate in the room: its wood lit and graded like the photo, a soft shadow on the wall and a
+    /// contact line on the console.
+    func settle(_ crateLayer: CALayer) {
+        withoutAnimation {
+            if let art = crateLayer.contents.map({ $0 as! CGImage }) {
+                let front = SleevePrint.settle(art, look: look)
+                crateLayer.contents = front
+                // The box's depth, made from its own wood: the far wall sits up and to the right (further away),
+                // in shadow inside the box; the left side joins the two, facing away from the lamp.
+                let f = crateFrame
+                let depth = CGVector(dx: f.width * 0.07, dy: -f.height * 0.36)
+                crateBack.contents = SleevePrint.darken(front, by: 0.55)
+                crateBack.contentsGravity = .resize
+                crateBack.frame = CGRect(x: f.minX + depth.dx, y: f.minY + depth.dy, width: f.width * 0.95, height: f.height * 0.95)
+                crateSide.contents = SleevePrint.darken(front, by: 0.45)
+                crateSide.contentsGravity = .resize
+                crateSide.anchorPoint = .zero
+                let side = CGSize(width: f.width, height: f.height)
+                crateSide.bounds = CGRect(origin: .zero, size: side)
+                crateSide.position = .zero
+                crateSide.transform = ReceiverOverlay.projection(of: side, onto: [
+                    CGPoint(x: f.minX + depth.dx, y: f.minY + depth.dy), CGPoint(x: f.minX + f.width * 0.06, y: f.minY),
+                    CGPoint(x: f.minX + f.width * 0.06, y: f.maxY), CGPoint(x: f.minX + depth.dx, y: f.minY + depth.dy + f.height * 0.95),
+                ])
+                crateSide.isHidden = false
+                crateBack.isHidden = false
+            } else {
+                crateSide.isHidden = true
+                crateBack.isHidden = true
+            }
+
+            let size = crateFrame.size
+            let away: CGFloat = settings.lightFrom == "left" ? 1 : (settings.lightFrom == "none" ? 0 : -1)
+            let blur = size.height * 0.12
+            let pad = blur * 3
+            crateShadow.bounds = CGRect(x: 0, y: 0, width: size.width + pad * 2, height: size.height + pad * 2)
+            crateShadow.position = CGPoint(x: crateFrame.midX + away * size.width * 0.05, y: crateFrame.midY)
+            crateShadow.contents = SleevePrint.shadow(size: size, blur: blur, pad: pad, contactOffset: away * size.width * 0.05)
+            crateShadow.contentsGravity = .resize
+        }
     }
 
     func configureCrate(_ spec: SceneConfig.Layer, canvas: CGSize) {
         crateFrame = spec.rect
         stack.frame = CGRect(origin: .zero, size: canvas)
         stack.name = "crate_stack"
+        // Sleeves stand on the crate's floor: never show below its bottom edge.
+        let floor = CALayer()
+        floor.backgroundColor = NSColor.black.cgColor
+        floor.frame = CGRect(x: 0, y: 0, width: canvas.width, height: crateFrame.maxY - 4)
+        stack.mask = floor
         rebuildStack()
     }
 
@@ -149,16 +243,17 @@ final class SleeveCrate {
         } else {
             CATransaction.setDisableActions(true)
         }
-        wall.contents = desired
+        wall.contents = printed(desired)
         CATransaction.commit()
     }
 
     private func reveal(_ image: CGImage, animated: Bool) {
         shownWall = image
         withoutAnimation {
-            wall.contents = image
+            wall.contents = printed(image)
             wall.opacity = 1
             wallShadow?.opacity = wallShadowOpacity
+            castShadow.opacity = 1
         }
         guard animated else { return }
         let shadowFade = CABasicAnimation(keyPath: "opacity")
@@ -166,6 +261,11 @@ final class SleeveCrate {
         shadowFade.toValue = wallShadowOpacity
         shadowFade.duration = 0.6
         wallShadow?.add(shadowFade, forKey: "reveal")
+        let castFade = CABasicAnimation(keyPath: "opacity")
+        castFade.fromValue = 0
+        castFade.toValue = 1
+        castFade.duration = 0.6
+        castShadow.add(castFade, forKey: "reveal")
         let fade = CABasicAnimation(keyPath: "opacity")
         fade.fromValue = 0
         fade.toValue = 1
@@ -226,18 +326,25 @@ final class SleeveCrate {
 
     private func makeSleeveLayer(_ item: Item) -> CALayer {
         let layer = CALayer()
-        layer.contents = item.image ?? defaultSleeve
+        layer.contents = printed(item.image ?? defaultSleeve)
         layer.contentsGravity = .resizeAspectFill
         layer.masksToBounds = true
-        layer.borderWidth = 1
-        layer.borderColor = NSColor(white: 1, alpha: 0.1).cgColor
-        layer.cornerRadius = 2
+        layer.cornerRadius = 1
         layer.bounds = CGRect(x: 0, y: 0, width: sleeveSide, height: sleeveSide)
         let lighting = CAGradientLayer()
         lighting.name = "lighting"
         lighting.frame = layer.bounds
         applyLighting(to: lighting, darkness: settings.sleeveShade)
         layer.addSublayer(lighting)
+        // Falls into the crate's shadow where it goes down behind the front board.
+        let rim = CAGradientLayer()
+        rim.name = "rim"
+        rim.frame = layer.bounds
+        rim.colors = [NSColor.black.withAlphaComponent(0).cgColor, NSColor.black.withAlphaComponent(0.55).cgColor]
+        rim.locations = [NSNumber(value: Double(settings.peek * 0.35)), NSNumber(value: Double(settings.peek))]
+        rim.startPoint = CGPoint(x: 0.5, y: 0)
+        rim.endPoint = CGPoint(x: 0.5, y: 1)
+        layer.addSublayer(rim)
         let shade = CALayer()
         shade.name = "shade"
         shade.backgroundColor = NSColor.black.cgColor
@@ -254,7 +361,7 @@ final class SleeveCrate {
         let (jx, jr) = jitter(id)
         let top = crateFrame.minY - s * settings.peek - CGFloat(index) * 2.2 - lift
         layer.bounds = CGRect(x: 0, y: 0, width: s, height: s)
-        layer.position = CGPoint(x: crateFrame.midX + jx * crateFrame.width * 0.035, y: top + s / 2)
+        layer.position = CGPoint(x: crateFrame.midX + jx * crateFrame.width * 0.035 + CGFloat(index) * 0.4, y: top + s / 2)
         layer.setAffineTransform(CGAffineTransform(rotationAngle: lift > 0 ? 0 : jr * .pi / 180 * 2))
         layer.zPosition = CGFloat(items.count - index)
         layer.opacity = 1
@@ -262,6 +369,10 @@ final class SleeveCrate {
         shade?.frame = layer.bounds
         shade?.opacity = lift > 0 ? 0 : Float(min(0.55, Double(index) * 0.07))
         layer.sublayers?.first { $0.name == "lighting" }?.frame = layer.bounds
+        if let rim = layer.sublayers?.first(where: { $0.name == "rim" }) {
+            rim.frame = layer.bounds
+            rim.opacity = lift > 0 ? 0 : 1
+        }
     }
 
     private func jitter(_ id: UUID) -> (CGFloat, CGFloat) {
@@ -279,12 +390,13 @@ final class SleeveCrate {
                                                            width: 100, height: 100)
         // The flying copy takes over from the wall, which stays empty until the next sleeve arrives.
         if wallFrame != .zero {
-            layer.contents = shownWall ?? item.image ?? defaultSleeve
+            layer.contents = printed(shownWall ?? item.image ?? defaultSleeve)
             wallHoldImage = shownWall
             wallHoldUntil = Date().addingTimeInterval(1.6)
             withoutAnimation {
                 wall.opacity = 0
                 wallShadow?.opacity = 0
+                castShadow.opacity = 0
             }
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.65) { [weak self] in
                 guard let self, self.wallHoldImage != nil else { return }
@@ -327,6 +439,7 @@ final class SleeveCrate {
         shadeSize.timingFunction = group.timingFunction
         shade?.add(shadeSize, forKey: "fly")
         layer.sublayers?.first { $0.name == "lighting" }?.add(shadeSize, forKey: "fly")
+        layer.sublayers?.first { $0.name == "rim" }?.add(shadeSize, forKey: "fly")
     }
 
     // MARK: - Browsing

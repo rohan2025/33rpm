@@ -5,9 +5,9 @@ Everything below is a draft: edit freely before posting. Images are in this fold
 ## Before you post (checklist)
 
 - [ ] Record a 15–30 s screen video (shot list below). This is the single most important asset.
-- [ ] Build the release: `scripts/package.sh` → `build/release/33rpm-1.2.0.dmg` and `33rpm-bridge-1.2.0.zip`.
+- [ ] Build the release: `scripts/package.sh` → `build/release/33rpm-1.2.1.dmg` and `33rpm-bridge-1.2.1.zip`.
 - [x] Download page: https://github.com/rohan2025/33rpm/releases/latest (public repo, MIT license, latest DMG attached).
-- [ ] Optional: submit `33rpm-bridge-1.2.0.zip` to the Chrome Web Store ($5 one-time developer fee, review takes a few days)
+- [ ] Optional: submit `33rpm-bridge-1.2.1.zip` to the Chrome Web Store ($5 one-time developer fee, review takes a few days)
       so people can install the extension with one click instead of "Load unpacked".
 - [ ] Optional: Apple Developer Program ($99/yr) + notarization removes the "can't verify developer" warning.
       Without it, people open it via System Settings → Privacy & Security → Open Anyway (explained in the DMG's Read Me).
@@ -67,7 +67,7 @@ Tip: export at 1080p, trim in QuickTime (Cmd+T), keep it silent or add a short m
   >
   > The rooms are AI-generated and you can drop in your own art; each scene is just a folder of PNGs and a JSON file. Would love to hear which room you'd want next!
 
-## Chrome Web Store listing (for 33rpm-bridge-1.2.0.zip)
+## Chrome Web Store listing (for 33rpm-bridge-1.2.1.zip)
 
 - **Name:** 33rpm Bridge
 - **Summary** (≤132): `Shows what's playing in YouTube Music on the 33rpm turntable for macOS. Talks only to the 33rpm app on your own computer.`

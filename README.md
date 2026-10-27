@@ -12,7 +12,7 @@ music.youtube.com tab ──► Chrome extension (MV3) ──ws://127.0.0.1:3333
 
 ## Install (for everyone)
 
-1. Download **[33rpm-1.2.0.dmg](https://github.com/rohan2025/33rpm/releases/latest)** from the latest release,
+1. Download **[33rpm-1.2.1.dmg](https://github.com/rohan2025/33rpm/releases/latest)** from the latest release,
    drag **33rpm** into Applications and open it.
    It's a free hobby app and isn't notarized, so macOS will block it the first time:
    open **System Settings → Privacy & Security**, scroll down and click **Open Anyway**.
@@ -119,7 +119,7 @@ Files are looked up in this order, first match wins:
 | `background.png` | scene | Full room: wall, floor, lamp. Covers the whole canvas (1500×1000). |
 | `plant.png` | scene | Transparent PNG. |
 | `console.png` | scene | Walnut record console, drawn in perspective. |
-| `sleeve_shadow.png` | scene | Soft shadow behind the leaning sleeve. |
+| `sleeve_shadow.png` | scene | Optional extra shadow behind the leaning sleeve (one is cast automatically). |
 | `crate.png` | scene | Front panel of the crate only (transparent above it): played sleeves stand behind it and poke out the top. |
 | `deck_base.png` | deck | Turntable top, **drawn straight down from above**. |
 | `platter.png` | deck | Top-down, square canvas, circle filling it. |

@@ -423,12 +423,19 @@ final class WallTitle {
 @MainActor
 final class ReceiverOverlay {
     let layer = CALayer()
-    private let display = CALayer()           // clips the text
-    private let text = CALayer()              // title + artist, may scroll
+    private let screen = CALayer()            // the display window, in the photo's perspective
+    private let panel = CALayer()             // our own dark VFD glass, filling the window
+    private let display = CALayer()           // clips the text, right of the play/pause mark
+    private let ghost = CALayer()             // every unlit dot, faintly visible behind the glass
+    private let glass = CALayer()             // bezel shadow and a faint reflection over the text
+    private let titleLine = CALayer()         // each line scrolls on its own when it's too long
+    private let artistLine = CALayer()
     private let stateGlyph = CALayer()
     private var knobs: [(command: PlayerCommand, center: CGPoint, radius: CGFloat, ring: CAShapeLayer, press: CALayer)] = []
     private var labels: [CALayer] = []
     private var displayRect = CGRect.zero
+    /// The dot-matrix grid: two lines of `cellsWide` characters, `pitch` points between dots.
+    private var grid = (origin: CGPoint.zero, pitch: CGFloat(1), cellsWide: 13, lineGap: CGFloat(3))
     private var title = ""
     private var artist = ""
     private var isPlaying = false
@@ -446,16 +453,26 @@ final class ReceiverOverlay {
     init() {
         layer.name = "receiver"
         display.masksToBounds = true
-        layer.addSublayer(display)
-        display.addSublayer(text)
-        for l in [text, stateGlyph] {
+        layer.addSublayer(screen)
+        panel.contentsGravity = .resize
+        screen.addSublayer(panel)
+        ghost.contentsGravity = .resize
+        screen.addSublayer(ghost)
+        screen.addSublayer(display)
+        display.addSublayer(titleLine)
+        display.addSublayer(artistLine)
+        for l in [titleLine, artistLine, stateGlyph] {
             l.contentsGravity = .resize
+            l.anchorPoint = .zero
+            // Lit from behind the smoked glass: adds light to it instead of painting over it.
+            l.compositingFilter = "screenBlendMode"
             l.shadowColor = Self.amber.cgColor
-            l.shadowOpacity = 0.9
-            l.shadowRadius = 2.2
+            l.shadowOpacity = 0.75
+            l.shadowRadius = 1.4
             l.shadowOffset = .zero
         }
-        layer.addSublayer(stateGlyph)
+        screen.addSublayer(stateGlyph)
+        screen.addSublayer(glass)
     }
 
     func configure(_ spec: SceneConfig.Receiver, canvas: CGSize) {
@@ -464,9 +481,44 @@ final class ReceiverOverlay {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         layer.frame = CGRect(origin: .zero, size: canvas)
-        display.frame = displayRect.insetBy(dx: 3, dy: 2)
-        let g = displayRect.height * 0.26
-        stateGlyph.frame = CGRect(x: displayRect.minX + 4, y: displayRect.minY + 4, width: g, height: g)
+        // Everything on the display is laid out flat in `inner`, then projected onto the window's corners.
+        let corners = (spec.window ?? []).filter { $0.count >= 2 }.map { CGPoint(x: $0[0], y: $0[1]) }
+        let inner: CGRect
+        screen.anchorPoint = .zero
+        if corners.count == 4 {
+            inner = CGRect(x: 0, y: 0,
+                           width: ((corners[1].x - corners[0].x) + (corners[2].x - corners[3].x)) / 2,
+                           height: ((corners[3].y - corners[0].y) + (corners[2].y - corners[1].y)) / 2)
+            screen.bounds = inner
+            screen.position = .zero
+            screen.transform = Self.projection(of: inner.size, onto: corners)
+            panel.frame = inner
+            panel.contents = Self.panelImage(size: inner.size)
+            panel.isHidden = false
+        } else {
+            inner = CGRect(origin: .zero, size: displayRect.size)
+            screen.transform = CATransform3DIdentity
+            screen.bounds = inner
+            screen.position = displayRect.origin
+            panel.isHidden = true
+        }
+        // Two lines of 5×7 characters with a little dark glass around them, like a real 2-line VFD.
+        let cellsWide = 13
+        let lineGap: CGFloat = 2.5   // in dots
+        let pitch = min((inner.width - 14) / CGFloat(cellsWide * DotMatrix.cellDots - 1),
+                        (inner.height - 12) / (CGFloat(DotMatrix.rows * 2) + lineGap + 2))
+        let gridSize = CGSize(width: CGFloat(cellsWide * DotMatrix.cellDots - 1) * pitch,
+                              height: (CGFloat(DotMatrix.rows * 2) + lineGap) * pitch)
+        grid = (CGPoint(x: (inner.width - gridSize.width) / 2, y: (inner.height - gridSize.height) / 2),
+                pitch, cellsWide, lineGap * pitch)
+        ghost.frame = CGRect(origin: grid.origin, size: gridSize)
+        ghost.contents = DotMatrix.ghost(cellsWide: cellsWide, lines: 2, lineGap: grid.lineGap, pitch: pitch,
+                                         color: Self.amber.withAlphaComponent(0.075))
+        glass.frame = inner
+        glass.contents = Self.glassImage(size: inner.size)
+        glass.contentsGravity = .resize
+        // The legends lean with the row of knobs, which the photo shows slightly from below-left.
+        let row = spec.knobs.count >= 2 ? atan2(spec.knobs.last![1] - spec.knobs[0][1], spec.knobs.last![0] - spec.knobs[0][0]) : 0
         knobs.forEach { $0.ring.removeFromSuperlayer(); $0.press.removeFromSuperlayer() }
         labels.forEach { $0.removeFromSuperlayer() }
         knobs = []
@@ -498,6 +550,7 @@ final class ReceiverOverlay {
             label.frame = CGRect(x: center.x - lw / 2, y: center.y - r - lh - 2.5, width: lw, height: lh)
             label.contents = Self.legend(marks[i])
             label.contentsGravity = .resizeAspect
+            label.setAffineTransform(CGAffineTransform(rotationAngle: row * 0.6))
             label.opacity = controlsEnabled ? 1 : 0
             layer.addSublayer(label)
             labels.append(label)
@@ -539,12 +592,13 @@ final class ReceiverOverlay {
         k.press.add(sink, forKey: "press")
         let word: String
         switch command {
-        case .previous: word = "◂◂  PREV"
-        case .next: word = "NEXT  ▸▸"
-        default: word = isPlaying ? "❚❚  PAUSE" : "▶  PLAY"
+        case .previous: word = "<< PREV"
+        case .next: word = "NEXT >>"
+        default: word = isPlaying ? "❚ PAUSE" : "▶ PLAY"
         }
         flashing = true
-        setText(Self.renderLines(word, nil, width: display.bounds.width, height: display.bounds.height), scroll: false)
+        stateGlyph.opacity = 0
+        show(word, nil, leading: false)
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.1) { [weak self] in
             self?.flashing = false
             self?.renderText()
@@ -564,88 +618,152 @@ final class ReceiverOverlay {
         guard isConfigured, !flashing else { return }
         CATransaction.begin()
         CATransaction.setDisableActions(true)
-        stateGlyph.contents = title.isEmpty ? nil : Self.glyph(isPlaying ? "play.fill" : "pause.fill")
+        stateGlyph.contents = title.isEmpty || !showsTitle ? nil
+            : DotMatrix.render(DotMatrix.cells(isPlaying ? "▶" : "❚"), pitch: grid.pitch, color: Self.amber).image
+        stateGlyph.opacity = 1
         CATransaction.commit()
-        let w = display.bounds.width, h = display.bounds.height
         if title.isEmpty || !showsTitle {
-            setText(Self.renderLines("33⅓ RPM", nil, width: w, height: h, dim: true), scroll: false)
+            show("33⅓ RPM", nil, dim: true, leading: false)
         } else {
-            setText(Self.renderLines(title.uppercased(), artist.uppercased(), width: w, height: h), scroll: true)
+            show(title.uppercased(), artist.isEmpty ? nil : artist.uppercased(), leading: true)
         }
     }
 
-    private func setText(_ rendered: (image: CGImage?, width: CGFloat), scroll: Bool) {
-        let w = display.bounds.width, h = display.bounds.height
+    /// Title on the first line, artist on the second, in the display's fixed character cells. `leading` keeps the
+    /// first two cells for the play/pause mark; otherwise a single line is centred.
+    private func show(_ line1: String, _ line2: String?, dim: Bool = false, leading: Bool) {
+        let p = grid.pitch
+        let cell = CGFloat(DotMatrix.cellDots) * p
+        let lineHeight = CGFloat(DotMatrix.rows) * p
+        let firstCell = leading ? 2 : 0
+        let visible = grid.cellsWide - firstCell
+        let color = Self.amber.withAlphaComponent(dim ? 0.45 : 0.95)
+
         CATransaction.begin()
         CATransaction.setDisableActions(true)
-        text.removeAnimation(forKey: "marquee")
+        display.frame = CGRect(x: grid.origin.x + CGFloat(firstCell) * cell, y: grid.origin.y,
+                               width: CGFloat(visible) * cell - p, height: lineHeight * 2 + grid.lineGap)
+        place(titleLine, DotMatrix.cells(line1), y: 0, visible: visible, centred: !leading, color: color)
+        if let line2 {
+            artistLine.isHidden = false
+            place(artistLine, DotMatrix.cells(line2), y: lineHeight + grid.lineGap, visible: visible, centred: !leading,
+                  color: color.withAlphaComponent(dim ? 0.35 : 0.6))
+        } else {
+            artistLine.isHidden = true
+            artistLine.removeAnimation(forKey: "marquee")
+        }
+        stateGlyph.frame = CGRect(x: grid.origin.x, y: grid.origin.y, width: CGFloat(DotMatrix.columns) * p, height: lineHeight)
+        CATransaction.commit()
+    }
+
+    /// Lays out one line in its cells. Too long: it steps along a character at a time, the way these displays
+    /// scroll, pauses at the end and jumps back.
+    private func place(_ line: CALayer, _ cells: [[UInt8]], y: CGFloat, visible: Int, centred: Bool, color: NSColor) {
+        let cell = CGFloat(DotMatrix.cellDots) * grid.pitch
+        let rendered = DotMatrix.render(cells, pitch: grid.pitch, color: color)
+        line.removeAnimation(forKey: "marquee")
         let fadeIn = CATransition()
         fadeIn.type = .fade
-        fadeIn.duration = 0.25
-        text.add(fadeIn, forKey: "contents")
-        text.contents = rendered.image
-        let tw = max(w, rendered.width)
-        text.frame = CGRect(x: 0, y: 0, width: tw, height: h)
-        CATransaction.commit()
-        // Long titles drift across slowly, pausing at each end.
-        guard scroll, tw > w + 1 else { return }
-        let travel = tw - w
-        let move = Double(travel / 14)
-        let hold = 2.2
-        let total = hold + move + hold + move
+        fadeIn.duration = 0.2
+        line.add(fadeIn, forKey: "contents")
+        line.contents = rendered.image
+        let x = cells.count < visible && centred ? CGFloat((visible - cells.count) / 2) * cell : 0
+        line.frame = CGRect(origin: CGPoint(x: x, y: y), size: rendered.size)
+        let steps = cells.count - visible
+        guard steps > 0 else { return }
+        let hold = 2.5, step = 0.32, end = 1.8
+        let total = hold + Double(steps) * step + end
         let anim = CAKeyframeAnimation(keyPath: "position.x")
-        let start = tw / 2, end = tw / 2 - travel
-        anim.values = [start, start, end, end, start]
-        anim.keyTimes = [0, NSNumber(value: hold / total), NSNumber(value: (hold + move) / total),
-                         NSNumber(value: (hold + move + hold) / total), 1]
+        anim.calculationMode = .discrete
+        var values: [CGFloat] = [0], times: [NSNumber] = [0]
+        for k in 1...steps {
+            values.append(-CGFloat(k) * cell)
+            times.append(NSNumber(value: (hold + Double(k - 1) * step) / total))
+        }
+        values.append(-CGFloat(steps) * cell)
+        times.append(1)
+        anim.values = values
+        anim.keyTimes = times
         anim.duration = total
         anim.repeatCount = .infinity
-        text.add(anim, forKey: "marquee")
+        line.add(anim, forKey: "marquee")
     }
 
-    /// Glowing amber capitals, title above artist. Returns the text's full width for scrolling.
-    private static func renderLines(_ line1: String, _ line2: String?, width: CGFloat, height: CGFloat,
-                                    dim: Bool = false) -> (image: CGImage?, width: CGFloat) {
-        let titleSize = height * (line2 == nil ? 0.36 : 0.34)
-        let artistSize = height * 0.2
-        let titleFont = NSFont.monospacedSystemFont(ofSize: titleSize, weight: .semibold)
-        let artistFont = NSFont.monospacedSystemFont(ofSize: artistSize, weight: .medium)
-        let color = amber.withAlphaComponent(dim ? 0.45 : 0.95)
-        let a1: [NSAttributedString.Key: Any] = [.font: titleFont, .foregroundColor: color, .kern: titleSize * 0.08]
-        let a2: [NSAttributedString.Key: Any] = [.font: artistFont, .foregroundColor: color.withAlphaComponent(dim ? 0.4 : 0.7),
-                                                 .kern: artistSize * 0.15]
-        let pad = height * 0.42   // leaves room for the play/pause glyph on the left
-        let w1 = (line1 as NSString).size(withAttributes: a1).width
-        let w2 = line2.map { ($0 as NSString).size(withAttributes: a2).width } ?? 0
-        let textWidth = max(w1, w2) + pad + 6
-        let fits = textWidth <= width
-        let total = fits ? width : textWidth
-        let image = Placeholders.render(size: CGSize(width: total, height: height), scale: 4) { _, r in
-            let x = fits && line2 == nil ? (r.width - w1) / 2 : pad
-            if let line2 {
-                (line1 as NSString).draw(at: CGPoint(x: x, y: r.height * 0.1), withAttributes: a1)
-                (line2 as NSString).draw(at: CGPoint(x: x, y: r.height * 0.58), withAttributes: a2)
-            } else {
-                (line1 as NSString).draw(at: CGPoint(x: x, y: (r.height - titleSize * 1.25) / 2), withAttributes: a1)
+    /// The perspective transform that maps a flat `size` rectangle (anchored at its top-left) onto four corners:
+    /// top-left, top-right, bottom-right, bottom-left. A standard square-to-quad homography.
+    static func projection(of size: CGSize, onto q: [CGPoint]) -> CATransform3D {
+        let (p0, p1, p2, p3) = (q[0], q[1], q[2], q[3])
+        let dx1 = p1.x - p2.x, dx2 = p3.x - p2.x, dx3 = p0.x - p1.x + p2.x - p3.x
+        let dy1 = p1.y - p2.y, dy2 = p3.y - p2.y, dy3 = p0.y - p1.y + p2.y - p3.y
+        let den = dx1 * dy2 - dx2 * dy1
+        let g = den == 0 ? 0 : (dx3 * dy2 - dx2 * dy3) / den
+        let h = den == 0 ? 0 : (dx1 * dy3 - dx3 * dy1) / den
+        let a = p1.x - p0.x + g * p1.x, b = p3.x - p0.x + h * p3.x
+        let d = p1.y - p0.y + g * p1.y, e = p3.y - p0.y + h * p3.y
+        var t = CATransform3DIdentity
+        t.m11 = a / size.width; t.m12 = d / size.width; t.m14 = g / size.width
+        t.m21 = b / size.height; t.m22 = e / size.height; t.m24 = h / size.height
+        t.m41 = p0.x; t.m42 = p0.y
+        return t
+    }
+
+    /// Smoked VFD glass sitting in the window: near-black with a warm cast, deeper at the edges where the bezel
+    /// shades it, so it reads as a recessed screen rather than a flat panel.
+    private static func panelImage(size: CGSize) -> CGImage? {
+        Placeholders.render(size: size, scale: 4) { ctx, r in
+            let space = CGColorSpaceCreateDeviceRGB()
+            ctx.setFillColor(NSColor(srgbRed: 0.075, green: 0.05, blue: 0.035, alpha: 1).cgColor)
+            ctx.fill(r)
+            // Recess: the bezel's shadow along the top and left, falling off inward.
+            let edge = min(r.width, r.height) * 0.22
+            for (start, end) in [(CGPoint(x: 0, y: 0), CGPoint(x: 0, y: edge)),
+                                 (CGPoint(x: 0, y: 0), CGPoint(x: edge * 0.7, y: 0)),
+                                 (CGPoint(x: r.width, y: 0), CGPoint(x: r.width - edge * 0.5, y: 0)),
+                                 (CGPoint(x: 0, y: r.height), CGPoint(x: 0, y: r.height - edge * 0.5))] {
+                if let g = CGGradient(colorsSpace: space, colors: [NSColor(white: 0, alpha: 0.75).cgColor,
+                                                                   NSColor(white: 0, alpha: 0).cgColor] as CFArray,
+                                      locations: [0, 1]) {
+                    ctx.drawLinearGradient(g, start: start, end: end, options: [])
+                }
+            }
+            // A hairline where the glass meets the frame.
+            ctx.setStrokeColor(NSColor(white: 0, alpha: 0.85).cgColor)
+            ctx.setLineWidth(1.2)
+            ctx.stroke(r.insetBy(dx: 0.6, dy: 0.6))
+        }
+    }
+
+    /// Dark silkscreen printing on the brushed faceplate, with a hairline of light catching its lower edge.
+    private static func legend(_ name: String) -> CGImage? {
+        func symbol(_ color: NSColor) -> NSImage? {
+            let config = NSImage.SymbolConfiguration(pointSize: 30, weight: .semibold)
+                .applying(NSImage.SymbolConfiguration(paletteColors: [color]))
+            return NSImage(systemSymbolName: name, accessibilityDescription: nil)?.withSymbolConfiguration(config)
+        }
+        guard let ink = symbol(NSColor(white: 0.06, alpha: 0.78)),
+              let catchLight = symbol(NSColor(white: 1, alpha: 0.16)) else { return nil }
+        let size = CGSize(width: ink.size.width, height: ink.size.height + 2.5)
+        return Placeholders.render(size: size, scale: 2) { _, _ in   // flipped: y grows downward
+            catchLight.draw(in: CGRect(x: 0, y: 2.5, width: ink.size.width, height: ink.size.height))
+            ink.draw(in: CGRect(x: 0, y: 0, width: ink.size.width, height: ink.size.height))
+        }
+    }
+
+    /// Smoked glass: the bezel's shadow along the top, a soft falloff at the bottom and one diagonal reflection.
+    private static func glassImage(size: CGSize) -> CGImage? {
+        Placeholders.render(size: size, scale: 4) { ctx, r in
+            let space = CGColorSpaceCreateDeviceRGB()
+            if let shade = CGGradient(colorsSpace: space, colors: [
+                NSColor(white: 0, alpha: 0.4).cgColor, NSColor(white: 0, alpha: 0).cgColor,
+                NSColor(white: 0, alpha: 0).cgColor, NSColor(white: 0, alpha: 0.2).cgColor] as CFArray,
+                                      locations: [0, 0.3, 0.75, 1]) {
+                ctx.drawLinearGradient(shade, start: CGPoint(x: 0, y: r.minY), end: CGPoint(x: 0, y: r.maxY), options: [])
+            }
+            if let sheen = CGGradient(colorsSpace: space, colors: [
+                NSColor(white: 1, alpha: 0).cgColor, NSColor(white: 1, alpha: 0.035).cgColor,
+                NSColor(white: 1, alpha: 0).cgColor] as CFArray, locations: [0.3, 0.42, 0.58]) {
+                ctx.drawLinearGradient(sheen, start: CGPoint(x: r.minX, y: r.minY), end: CGPoint(x: r.maxX, y: r.maxY), options: [])
             }
         }
-        return (image, total)
-    }
-
-    private static func glyph(_ name: String) -> CGImage? {
-        let config = NSImage.SymbolConfiguration(pointSize: 30, weight: .bold)
-            .applying(NSImage.SymbolConfiguration(paletteColors: [amber.withAlphaComponent(0.9)]))
-        guard let img = NSImage(systemSymbolName: name, accessibilityDescription: nil)?.withSymbolConfiguration(config)
-        else { return nil }
-        return Placeholders.render(size: img.size, scale: 2) { _, r in img.draw(in: r) }
-    }
-
-    /// Small light-grey symbol, like silkscreen printing on brushed aluminium.
-    private static func legend(_ name: String) -> CGImage? {
-        let config = NSImage.SymbolConfiguration(pointSize: 30, weight: .semibold)
-            .applying(NSImage.SymbolConfiguration(paletteColors: [NSColor(white: 0.92, alpha: 0.75)]))
-        guard let img = NSImage(systemSymbolName: name, accessibilityDescription: nil)?.withSymbolConfiguration(config)
-        else { return nil }
-        return Placeholders.render(size: img.size, scale: 2) { _, r in img.draw(in: r) }
     }
 }

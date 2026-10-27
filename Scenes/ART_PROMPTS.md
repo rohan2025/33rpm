@@ -88,7 +88,7 @@ Subtle motion only: rain running down glass, slow city bokeh, a candle flame on 
 ### Optional
 
 - `default_label.png` (square): a vintage cream record label with "33⅓", shown when nothing is playing.
-- `sleeve_shadow.png`: the placeholder soft shadow usually works. Delete the slot if you don't want it.
+- `sleeve_shadow.png`: optional. The app already casts a soft shadow away from `crate.lightFrom`; add this slot only for a custom one.
 - `lamp_glow.png`: a soft radial light, transparent edges. If your painted room already glows, set its
   `opacity` low (0.2–0.3) so it adds flicker without washing out the scene.
 
