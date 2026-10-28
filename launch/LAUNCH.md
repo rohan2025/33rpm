@@ -86,6 +86,8 @@ Tip: export at 1080p, trim in QuickTime (Cmd+T), keep it silent or add a short m
   - Host `https://music.youtube.com/*`: reads the now-playing info and queue on YouTube Music, and nowhere else.
   - Connects only to `ws://127.0.0.1` (the user's own computer).
 - **Privacy / data usage:** Collects no user data. Nothing is sold, transferred or used for anything other than the single purpose above.
+- **Privacy policy URL:** https://github.com/rohan2025/33rpm/blob/main/PRIVACY.md
+- **Homepage / support URL:** https://github.com/rohan2025/33rpm
 - **Images:** icon `extension/icon128.png`, screenshots `cws-screenshot-1..3.png` (1280×800), small promo tile `cws-promo-440x280.png`.
 
 ## Notes
