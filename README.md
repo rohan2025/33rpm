@@ -12,7 +12,7 @@ music.youtube.com tab ──► Chrome extension (MV3) ──ws://127.0.0.1:3333
 
 ## Install (for everyone)
 
-1. Download **[33rpm-1.2.1.dmg](https://github.com/rohan2025/33rpm/releases/latest)** from the latest release,
+1. Download **[33rpm-1.2.2.dmg](https://github.com/rohan2025/33rpm/releases/latest)** from the latest release,
    drag **33rpm** into Applications and open it.
    It's a free hobby app and isn't notarized, so macOS will block it the first time:
    open **System Settings → Privacy & Security**, scroll down and click **Open Anyway**.

@@ -1,11 +1,13 @@
 #!/bin/zsh
 # Builds a shareable release into build/release/:
 #   33rpm-<version>.dmg        app + Read Me First
-#   33rpm-bridge-<version>.zip extension, ready to upload to the Chrome Web Store
+#   33rpm-bridge-<ext version>.zip extension, ready to upload to the Chrome Web Store
 set -euo pipefail
 
 ROOT="${0:A:h:h}"
-VERSION=$(python3 -c "import json;print(json.load(open('$ROOT/extension/manifest.json'))['version'])")
+# The app and the extension are versioned separately: the extension only changes when its own code does.
+VERSION=$(sed -n 's/.*CFBundleShortVersionString<\/key><string>\(.*\)<\/string>.*/\1/p' "$ROOT/scripts/build_app.sh")
+EXT_VERSION=$(python3 -c "import json;print(json.load(open('$ROOT/extension/manifest.json'))['version'])")
 OUT="$ROOT/build/release"
 STAGE="$OUT/stage"
 
@@ -35,7 +37,7 @@ Everything stays on your Mac (127.0.0.1). No accounts, no analytics.
 TXT
 
 hdiutil create -volname "33rpm" -srcfolder "$STAGE" -ov -format UDZO "$OUT/33rpm-$VERSION.dmg" >/dev/null
-(cd "$ROOT/extension" && zip -qr "$OUT/33rpm-bridge-$VERSION.zip" . -x ".*")
+(cd "$ROOT/extension" && zip -qr "$OUT/33rpm-bridge-$EXT_VERSION.zip" . -x ".*")
 rm -rf "$STAGE"
 
 echo "Release files:"

@@ -5,7 +5,7 @@ Everything below is a draft: edit freely before posting. Images are in this fold
 ## Before you post (checklist)
 
 - [ ] Record a 15–30 s screen video (shot list below). This is the single most important asset.
-- [ ] Build the release: `scripts/package.sh` → `build/release/33rpm-1.2.1.dmg` and `33rpm-bridge-1.2.1.zip`.
+- [ ] Build the release: `scripts/package.sh` → `build/release/33rpm-1.2.2.dmg` and `33rpm-bridge-1.2.1.zip`.
 - [x] Download page: https://github.com/rohan2025/33rpm/releases/latest (public repo, MIT license, latest DMG attached).
 - [x] Chrome Web Store: live at https://chromewebstore.google.com/detail/33rpm-bridge/biiiggaibbnengablmcboeaehlhmffnj
 - [ ] Optional: Apple Developer Program ($99/yr) + notarization removes the "can't verify developer" warning.
