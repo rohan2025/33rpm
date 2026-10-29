@@ -1,6 +1,6 @@
 #!/bin/zsh
 # Builds a shareable release into build/release/:
-#   33rpm-<version>.dmg        app + Chrome extension folder + Read Me First
+#   33rpm-<version>.dmg        app + Read Me First
 #   33rpm-bridge-<version>.zip extension, ready to upload to the Chrome Web Store
 set -euo pipefail
 
@@ -14,7 +14,6 @@ STAGE="$OUT/stage"
 rm -rf "$OUT"
 mkdir -p "$STAGE"
 cp -R "$ROOT/build/33rpm.app" "$STAGE/"
-rsync -a --exclude ".*" "$ROOT/extension/" "$STAGE/33rpm Bridge (Chrome extension)/"
 ln -s /Applications "$STAGE/Applications"
 cat > "$STAGE/Read Me First.txt" <<'TXT'
 33rpm: a record player on your desktop for YouTube Music
@@ -23,9 +22,9 @@ cat > "$STAGE/Read Me First.txt" <<'TXT'
    macOS will say it can't verify the developer (this is a free hobby app, not notarized).
    Go to System Settings > Privacy & Security, scroll down and click "Open Anyway".
 
-2. In Chrome, go to chrome://extensions, turn on Developer mode (top right),
-   click "Load unpacked" and choose the "33rpm Bridge (Chrome extension)" folder.
-   (Or use 33rpm's Setup Guide in the menu bar, which has buttons for all of this.)
+2. In Chrome, add the 33rpm Bridge extension from the Chrome Web Store:
+   https://chromewebstore.google.com/detail/33rpm-bridge/biiiggaibbnengablmcboeaehlhmffnj
+   (33rpm's Setup Guide, in the menu bar, has a button for this.)
 
 3. Click the 33rpm Bridge icon in Chrome's toolbar and paste the pairing token
    (33rpm menu bar icon > Copy Pairing Token), then Save.

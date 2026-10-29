@@ -16,15 +16,15 @@ music.youtube.com tab ──► Chrome extension (MV3) ──ws://127.0.0.1:3333
    drag **33rpm** into Applications and open it.
    It's a free hobby app and isn't notarized, so macOS will block it the first time:
    open **System Settings → Privacy & Security**, scroll down and click **Open Anyway**.
-2. The **Setup Guide** opens on first launch (also in the menu bar). It has buttons to show the
-   Chrome extension folder, open Chrome's extensions page and copy your pairing token.
-3. In Chrome: `chrome://extensions` → **Developer mode** → **Load unpacked** → choose **33rpm Bridge**.
-   Click its toolbar icon, paste the token, **Save**.
+2. Add **[33rpm Bridge from the Chrome Web Store](https://chromewebstore.google.com/detail/33rpm-bridge/biiiggaibbnengablmcboeaehlhmffnj)**.
+3. The **Setup Guide** opens on first launch (also in the menu bar): copy your pairing token there,
+   click the 33rpm Bridge icon in Chrome's toolbar, paste the token, **Save**.
 4. Play something on music.youtube.com.
 
 ## Building from source
 
 `scripts/package.sh` builds the shareable DMG and a Chrome Web Store zip into `build/release/`.
+The store listing's privacy policy is [PRIVACY.md](PRIVACY.md).
 Launch copy and images live in `launch/`.
 
 ## Requirements
@@ -63,7 +63,7 @@ On first launch the app creates a pairing token at
 The scene sits at desktop level: above the wallpaper, below all windows and desktop icons, on every Space,
 and clicks pass through it. It won't be visible on a display while a full-screen app occupies it.
 
-## Load the Chrome extension (unpacked)
+## Load the Chrome extension from source (for development)
 
 1. Open `chrome://extensions` in Chrome.
 2. Turn on **Developer mode** (top right).

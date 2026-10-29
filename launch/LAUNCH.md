@@ -7,8 +7,7 @@ Everything below is a draft: edit freely before posting. Images are in this fold
 - [ ] Record a 15–30 s screen video (shot list below). This is the single most important asset.
 - [ ] Build the release: `scripts/package.sh` → `build/release/33rpm-1.2.1.dmg` and `33rpm-bridge-1.2.1.zip`.
 - [x] Download page: https://github.com/rohan2025/33rpm/releases/latest (public repo, MIT license, latest DMG attached).
-- [ ] Optional: submit `33rpm-bridge-1.2.1.zip` to the Chrome Web Store ($5 one-time developer fee, review takes a few days)
-      so people can install the extension with one click instead of "Load unpacked".
+- [x] Chrome Web Store: live at https://chromewebstore.google.com/detail/33rpm-bridge/biiiggaibbnengablmcboeaehlhmffnj
 - [ ] Optional: Apple Developer Program ($99/yr) + notarization removes the "can't verify developer" warning.
       Without it, people open it via System Settings → Privacy & Security → Open Anyway (explained in the DMG's Read Me).
 - [ ] Try the DMG on a second Mac or a fresh user account if you can.
@@ -46,6 +45,7 @@ Tip: export at 1080p, trim in QuickTime (Cmd+T), keep it silent or add a short m
 2. > Click the turntable to pause, click a song on the "Up Next" card on the wall to jump to it. Three rooms: Evening, Rainy Window, Minimal.
 3. > How it works: a tiny Chrome extension reads what YouTube Music is playing and sends it to a native Swift app over localhost. No accounts, no analytics, ~0% CPU (it's all Core Animation).
 4. > Download (macOS 14+, free): https://github.com/rohan2025/33rpm
+   > Chrome extension: https://chromewebstore.google.com/detail/33rpm-bridge/biiiggaibbnengablmcboeaehlhmffnj
 
 ## Product Hunt
 

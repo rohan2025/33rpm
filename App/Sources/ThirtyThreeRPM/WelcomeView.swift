@@ -22,9 +22,8 @@ struct WelcomeView: View {
             }
 
             step(1, "Add the Chrome extension",
-                 "In Chrome's Extensions page, turn on Developer mode, click Load unpacked and choose the 33rpm Bridge folder.") {
-                Button("Show Extension Folder") { WelcomeView.revealExtension() }
-                Button("Open Chrome Extensions") { WelcomeView.openChromeExtensions() }
+                 "Add 33rpm Bridge from the Chrome Web Store, then pin it from the puzzle-piece menu in Chrome's toolbar.") {
+                Button("Open in Chrome Web Store") { WelcomeView.openExtensionListing() }
             }
 
             step(2, "Pair it with this Mac",
@@ -77,25 +76,14 @@ struct WelcomeView: View {
         }
     }
 
-    /// The extension ships inside the app; copy it somewhere stable (Chrome keeps loading it from there) and show it.
-    static func revealExtension() {
-        let fm = FileManager.default
-        guard let bundled = Bundle.main.resourceURL?.appendingPathComponent("33rpm Bridge"),
-              fm.fileExists(atPath: bundled.path) else {
-            if let repo = SceneLibrary.repoRoot?.deletingLastPathComponent().appendingPathComponent("extension") {
-                NSWorkspace.shared.activateFileViewerSelecting([repo])
-            }
+    static let extensionListing = URL(string: "https://chromewebstore.google.com/detail/33rpm-bridge/biiiggaibbnengablmcboeaehlhmffnj")!
+
+    /// Opens the store page in Chrome (the extension only works there), or the default browser if Chrome isn't installed.
+    static func openExtensionListing() {
+        guard let chrome = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.google.Chrome") else {
+            NSWorkspace.shared.open(extensionListing)
             return
         }
-        let target = PairingToken.directory.appendingPathComponent("33rpm Bridge")
-        try? fm.removeItem(at: target)
-        try? fm.copyItem(at: bundled, to: target)
-        NSWorkspace.shared.activateFileViewerSelecting([target])
-    }
-
-    static func openChromeExtensions() {
-        guard let chrome = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.google.Chrome"),
-              let url = URL(string: "chrome://extensions") else { return }
-        NSWorkspace.shared.open([url], withApplicationAt: chrome, configuration: NSWorkspace.OpenConfiguration())
+        NSWorkspace.shared.open([extensionListing], withApplicationAt: chrome, configuration: NSWorkspace.OpenConfiguration())
     }
 }

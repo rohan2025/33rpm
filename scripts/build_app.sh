@@ -14,7 +14,6 @@ rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN" "$APP/Contents/MacOS/33rpm"
 cp "$ROOT/Assets/AppIcon.icns" "$APP/Contents/Resources/AppIcon.icns"
-rsync -a "$ROOT/extension/" "$APP/Contents/Resources/33rpm Bridge/"
 [[ -d "$ROOT/Scenes" ]] && rsync -a --exclude "_sources" "$ROOT/Scenes/" "$APP/Contents/Resources/Scenes/"
 
 cat > "$APP/Contents/Info.plist" <<'PLIST'
