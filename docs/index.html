@@ -41,7 +41,7 @@
     font: 17px/1.6 var(--sans);
     -webkit-font-smoothing: antialiased;
   }
-  img { display: block; max-width: 100%; height: auto; }
+  img, video { display: block; max-width: 100%; height: auto; }
   a { color: inherit; }
   .wrap { width: min(1120px, 100% - 32px); margin-inline: auto; }
 
@@ -159,8 +159,9 @@
       </a>
     </div>
     <p class="meta"><span id="version">Latest version</span> · macOS 14 or later · Works with YouTube Music in Google Chrome</p>
-    <img class="shot" src="img/hero.jpg" width="2000" height="1197"
-         alt="A warm evening living room on the Mac desktop: a turntable spinning on a wooden console, a stereo showing the song, a sleeve on the wall and a crate of played records.">
+    <video class="shot" id="demo" src="demo.mp4" poster="img/demo-poster.jpg" width="1280" height="826"
+           autoplay muted loop playsinline preload="metadata"
+           aria-label="33rpm on a Mac desktop: songs play on the turntable, the stereo shows each title, played sleeves go into the crate, and the room switches to Rainy Window."></video>
   </div>
 
   <section id="details">
@@ -293,6 +294,9 @@
     .then(r => r.ok ? r.json() : null)
     .then(r => { if (r && r.tag_name) document.getElementById("version").textContent = "Version " + r.tag_name.replace(/^v/, ""); })
     .catch(() => {});
+  // No autoplay for people who ask for less motion; they get the player controls instead.
+  const demo = document.getElementById("demo");
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) { demo.removeAttribute("autoplay"); demo.pause(); demo.controls = true; }
   const header = document.querySelector("header");
   addEventListener("scroll", () => header.classList.toggle("scrolled", scrollY > 8), { passive: true });
 </script>
