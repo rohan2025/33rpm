@@ -4,7 +4,7 @@ Everything below is a draft: edit freely before posting. Images are in this fold
 
 ## Before you post (checklist)
 
-- [ ] Record a 15–30 s screen video (shot list below). This is the single most important asset.
+- [x] Demo video recorded (Cap). A silent web version is at the top of the website (`docs/demo.mp4`).
 - [ ] Build the release: `scripts/package.sh` → `build/release/33rpm-1.2.2.dmg` and `33rpm-bridge-1.2.1.zip`.
 - [x] Website: https://rohan2025.github.io/33rpm/ (GitHub Pages from `docs/`; download button gets the latest release).
 - [x] Chrome Web Store: live at https://chromewebstore.google.com/detail/33rpm-bridge/biiiggaibbnengablmcboeaehlhmffnj
@@ -40,25 +40,88 @@ Tip: export at 1080p, trim in QuickTime (Cmd+T), keep it silent or add a short m
 
 ## X (Twitter)
 
-**Post** (with the video):
+Attach the video to the main post. The link goes in the first reply, because X shows posts with links to fewer people.
+Every post below is under 280 characters.
 
-> I made my Mac desktop into a little listening room 🎶
->
-> 33rpm puts a turntable on your wallpaper that plays along with YouTube Music: the record spins at 33⅓, the arm tracks the song, and every track you play ends up in the crate.
->
-> Free, open source, runs 100% locally.
+**Main post** (with the video):
 
-**Reply thread:**
+```
+I turned my Mac desktop into a little listening room 🎶
 
-1. > Details I'm weirdly proud of:
-   > • the tonearm creeps inward as the song plays
-   > • the record eases to a stop when you pause
-   > • old sleeves arc into a wooden crate, hover to flip through, click to replay
-   > • dust drifts in the lamp light 🕯️
-2. > Click the turntable to pause, click a song on the "Up Next" card on the wall to jump to it. Three rooms: Evening, Rainy Window, Minimal.
-3. > How it works: a tiny Chrome extension reads what YouTube Music is playing and sends it to a native Swift app over localhost. No accounts, no analytics, ~0% CPU (it's all Core Animation).
-4. > Download (macOS 14+, free): https://rohan2025.github.io/33rpm/?ref=x
-   > Chrome extension: https://chromewebstore.google.com/detail/33rpm-bridge/biiiggaibbnengablmcboeaehlhmffnj
+33rpm puts a turntable on your wallpaper that plays along with YouTube Music. The record spins, the stereo shows the song, and every track ends up in a crate you can flip through.
+
+Free and open source. Link below 👇
+```
+
+**Reply 1:**
+
+```
+Download (free, macOS 14+): https://rohan2025.github.io/33rpm/?ref=x
+
+You'll also need the Chrome extension, which is linked on the page. Setup takes about 2 minutes.
+```
+
+**Reply 2:**
+
+```
+Details I'm weirdly proud of:
+• the arm creeps inward as the song plays
+• the record eases to a stop when you pause
+• the stereo's dot-matrix display shows the title
+• played sleeves drop into the crate, and you can click one to play it again
+```
+
+**Reply 3:**
+
+```
+How it works: a small Chrome extension reads what YouTube Music is playing and sends it to a native Swift app on your Mac over localhost.
+
+No account, no analytics, ~0% CPU. It's all Core Animation.
+```
+
+**Reply 4:**
+
+```
+Three rooms so far: Evening, Rainy Window and Minimal. Each one is just a folder of images, so you can make your own.
+
+Which room should I build next?
+```
+
+## LinkedIn
+
+Attach the video. Put the link in the first comment, because LinkedIn shows posts with links to fewer people. The first
+two lines are what people see before "...see more", so they carry the post.
+
+**Post:**
+
+```
+I missed putting on a record, so I built a turntable into my Mac desktop. 🎶
+
+I listen to YouTube Music all day while I work. It's convenient, but I missed the little ritual of a record player: the sleeve, the needle dropping, a stack of what you've played growing next to it.
+
+So I made 33rpm, a free macOS app that puts a small listening room on your wallpaper and plays along with whatever's on YouTube Music:
+
+→ The record spins at 33⅓ with the album art on the label
+→ The arm creeps inward as the song plays
+→ A vintage stereo shows the song on a dot-matrix display, and its knobs pause and skip
+→ Every song you play drops into a wooden crate you can flip through and replay
+→ Three rooms: Evening, Rainy Window and Minimal
+
+Under the hood it's a native Swift app (Core Animation, so it sits at ~0% CPU) and a small Chrome extension that tells it what's playing. Everything stays on your Mac: no account, no analytics, no cloud.
+
+It's open source, and the extension is on the Chrome Web Store, so setup takes about two minutes.
+
+Download link in the first comment. I'd love to hear which room you'd want next. 👇
+
+#buildinpublic #macos #swift #opensource
+```
+
+**First comment** (post it right after):
+
+```
+Download for Mac (free): https://rohan2025.github.io/33rpm/?ref=linkedin
+Source code: https://github.com/rohan2025/33rpm
+```
 
 ## Product Hunt
 
