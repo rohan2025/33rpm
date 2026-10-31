@@ -1,6 +1,6 @@
 #!/bin/zsh
 # Builds a shareable release into build/release/:
-#   33rpm-<version>.dmg        app + Read Me First
+#   33rpm-<version>.dmg        app + Read Me First (also copied to 33rpm.dmg)
 #   33rpm-bridge-<ext version>.zip extension, ready to upload to the Chrome Web Store
 set -euo pipefail
 
@@ -37,6 +37,8 @@ Everything stays on your Mac (127.0.0.1). No accounts, no analytics.
 TXT
 
 hdiutil create -volname "33rpm" -srcfolder "$STAGE" -ov -format UDZO "$OUT/33rpm-$VERSION.dmg" >/dev/null
+# Same file under a fixed name, so releases/latest/download/33rpm.dmg always gets the newest version (the website links to it).
+cp "$OUT/33rpm-$VERSION.dmg" "$OUT/33rpm.dmg"
 (cd "$ROOT/extension" && zip -qr "$OUT/33rpm-bridge-$EXT_VERSION.zip" . -x ".*")
 rm -rf "$STAGE"
 

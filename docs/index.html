@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>33rpm: a record player on your Mac desktop</title>
+<meta name="description" content="33rpm puts a turntable on your Mac wallpaper that plays along with YouTube Music. Free, open source, runs entirely on your Mac.">
+<meta property="og:title" content="33rpm: a record player on your Mac desktop">
+<meta property="og:description" content="A turntable on your wallpaper that plays along with YouTube Music. Free and open source.">
+<meta property="og:image" content="https://rohan2025.github.io/33rpm/img/og.jpg">
+<meta property="og:url" content="https://rohan2025.github.io/33rpm/">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#120d0a">
+<link rel="icon" type="image/png" href="img/favicon.png">
+<link rel="apple-touch-icon" href="img/icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #120d0a;
+    --bg-2: #1a130f;
+    --line: #2e231b;
+    --text: #f3e7d8;
+    --muted: #b8a48e;
+    --faint: #7d6b59;
+    --amber: #f0a64a;
+    --amber-hi: #ffc173;
+    --serif: "Fraunces", Georgia, serif;
+    --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 17px/1.6 var(--sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  img { display: block; max-width: 100%; height: auto; }
+  a { color: inherit; }
+  .wrap { width: min(1120px, 100% - 32px); margin-inline: auto; }
+
+  /* Header */
+  header { position: sticky; top: 0; z-index: 10; background: rgba(18, 13, 10, 0.82); backdrop-filter: blur(12px);
+           -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid transparent; transition: border-color .2s; }
+  header.scrolled { border-bottom-color: var(--line); }
+  .bar { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font: 600 19px var(--serif); }
+  .brand img { width: 30px; height: 30px; border-radius: 7px; }
+  nav { display: flex; gap: 26px; font-size: 15px; }
+  nav a { color: var(--muted); text-decoration: none; }
+  nav a:hover { color: var(--text); }
+
+  /* Buttons */
+  .btns { display: flex; flex-wrap: wrap; gap: 12px; }
+  .btn { display: inline-flex; align-items: center; gap: 10px; padding: 14px 22px; border-radius: 999px;
+         font: 600 16px var(--sans); text-decoration: none; transition: transform .15s, background .15s, border-color .15s; }
+  .btn:active { transform: translateY(1px); }
+  .btn svg { width: 18px; height: 18px; flex: none; }
+  .btn-primary { background: var(--amber); color: #1a0f05; box-shadow: 0 8px 30px -10px rgba(240, 166, 74, .6); }
+  .btn-primary:hover { background: var(--amber-hi); }
+  .btn-ghost { border: 1px solid #4a3a2c; color: var(--text); }
+  .btn-ghost:hover { border-color: var(--muted); }
+
+  /* Hero */
+  .hero { padding: 72px 0 40px; text-align: center; }
+  .eyebrow { font: 500 12px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--amber); }
+  h1 { font: 400 clamp(40px, 7vw, 76px)/1.04 var(--serif); letter-spacing: -0.02em; margin: 18px auto 20px; max-width: 13ch; }
+  .lede { color: var(--muted); font-size: clamp(17px, 2.2vw, 20px); max-width: 600px; margin: 0 auto 32px; }
+  .hero .btns { justify-content: center; }
+  .meta { margin-top: 16px; font-size: 14px; color: var(--faint); }
+  .shot { margin: 56px auto 0; border-radius: 14px; overflow: hidden; border: 1px solid var(--line);
+          box-shadow: 0 40px 120px -40px rgba(240, 150, 60, .35), 0 20px 60px -20px #000; }
+
+  /* Sections */
+  section { padding: 88px 0; }
+  .head { max-width: 640px; margin-bottom: 44px; }
+  h2 { font: 400 clamp(30px, 4.4vw, 46px)/1.1 var(--serif); letter-spacing: -0.015em; margin: 12px 0 14px; }
+  .head p { color: var(--muted); margin: 0; }
+  h3 { font: 600 19px/1.3 var(--sans); margin: 18px 0 6px; }
+  .card p, .room p, .step p { color: var(--muted); margin: 0; font-size: 16px; }
+
+  .details { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
+  .card img { border-radius: 10px; border: 1px solid var(--line); aspect-ratio: 16 / 10; object-fit: cover; width: 100%; }
+
+  .rooms { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .room img { border-radius: 10px; border: 1px solid var(--line); aspect-ratio: 16 / 10; object-fit: cover; width: 100%; }
+  .room h3 { margin-top: 14px; }
+
+  .alt { background: var(--bg-2); border-block: 1px solid var(--line); }
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; counter-reset: step; }
+  .step { padding: 26px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); }
+  .step::before { counter-increment: step; content: counter(step); display: grid; place-items: center; width: 34px; height: 34px;
+                  border-radius: 50%; background: rgba(240, 166, 74, .14); color: var(--amber); font: 500 15px var(--mono); }
+  .step a { color: var(--amber); }
+  .note { margin-top: 26px; font-size: 15px; color: var(--faint); max-width: 760px; }
+  .note strong { color: var(--muted); font-weight: 500; }
+
+  .facts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line);
+           border-radius: 12px; overflow: hidden; }
+  .fact { background: var(--bg); padding: 26px; }
+  .fact b { display: block; font: 400 26px var(--serif); margin-bottom: 4px; }
+  .fact span { color: var(--muted); font-size: 15px; }
+
+  .cta { text-align: center; padding: 100px 0; }
+  .cta .btns { justify-content: center; margin-top: 28px; }
+
+  footer { border-top: 1px solid var(--line); padding: 32px 0 48px; color: var(--faint); font-size: 14px; }
+  footer .wrap { display: flex; flex-wrap: wrap; gap: 12px 28px; justify-content: space-between; }
+  footer a { color: var(--muted); text-decoration: none; margin-right: 20px; }
+  footer a:hover { color: var(--text); }
+
+  @media (max-width: 860px) {
+    nav a:not(.gh) { display: none; }
+    .details, .rooms, .steps { grid-template-columns: 1fr; }
+    .facts { grid-template-columns: 1fr 1fr; }
+    section { padding: 64px 0; }
+    .hero { padding-top: 48px; }
+  }
+  @media (max-width: 480px) {
+    .btn { width: 100%; justify-content: center; }
+    .facts { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header id="top">
+  <div class="wrap bar">
+    <a class="brand" href="#"><img src="img/icon.png" alt="">33rpm</a>
+    <nav>
+      <a href="#details">Features</a>
+      <a href="#setup">Setup</a>
+      <a href="#privacy">Privacy</a>
+      <a class="gh" href="https://github.com/rohan2025/33rpm">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="wrap hero">
+    <div class="eyebrow">Free · Open source · macOS</div>
+    <h1>A record player on your Mac desktop.</h1>
+    <p class="lede">33rpm puts a turntable on your wallpaper that plays along with YouTube Music. The record spins at 33⅓,
+      the arm follows the song, and every track you play ends up in the crate.</p>
+    <div class="btns">
+      <a class="btn btn-primary" href="https://github.com/rohan2025/33rpm/releases/latest/download/33rpm.dmg">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.4 12.6c0-2.6 2.1-3.8 2.2-3.9-1.2-1.8-3.1-2-3.7-2-1.6-.2-3.1.9-3.9.9-.8 0-2-.9-3.4-.9-1.7 0-3.3 1-4.2 2.6-1.8 3.1-.5 7.7 1.3 10.2.9 1.2 1.9 2.6 3.2 2.6 1.3-.1 1.8-.8 3.3-.8 1.6 0 2 .8 3.4.8s2.3-1.3 3.1-2.5c1-1.4 1.4-2.8 1.4-2.9 0 0-2.7-1-2.7-4.1zM13.9 5c.7-.9 1.2-2 1-3.2-1 0-2.3.7-3 1.6-.7.8-1.3 2-1.1 3.1 1.2.1 2.3-.6 3.1-1.5z"/></svg>
+        Download for Mac
+      </a>
+      <a class="btn btn-ghost" href="https://chromewebstore.google.com/detail/33rpm-bridge/biiiggaibbnengablmcboeaehlhmffnj">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><circle cx="12" cy="12" r="3.6"/><path d="M12 8.4h8.8M8.9 13.8 4.5 6.2M15.1 13.8l-4.4 7.6"/></svg>
+        Add to Chrome
+      </a>
+    </div>
+    <p class="meta"><span id="version">Latest version</span> · macOS 14 or later · Works with YouTube Music in Google Chrome</p>
+    <img class="shot" src="img/hero.jpg" width="2000" height="1197"
+         alt="A warm evening living room on the Mac desktop: a turntable spinning on a wooden console, a stereo showing the song, a sleeve on the wall and a crate of played records.">
+  </div>
+
+  <section id="details">
+    <div class="wrap">
+      <div class="head">
+        <div class="eyebrow">The details</div>
+        <h2>It behaves like the real thing.</h2>
+        <p>Nothing to open or arrange. Play a song in YouTube Music and the room responds.</p>
+      </div>
+      <div class="details">
+        <div class="card">
+          <img src="img/detail-turntable.jpg" width="1000" height="625" loading="lazy" alt="Close-up of the turntable with album art on the record label.">
+          <h3>The record spins at 33⅓</h3>
+          <p>Album art on the label, the arm creeping inward as the song plays, and an easy slow-down to a stop when you pause.</p>
+        </div>
+        <div class="card">
+          <img src="img/detail-receiver.jpg" width="1000" height="625" loading="lazy" alt="Close-up of the stereo's amber dot-matrix display showing the song and artist.">
+          <h3>A stereo that shows the song</h3>
+          <p>The title and artist glow on an amber dot-matrix display. Its knobs go back, pause and skip.</p>
+        </div>
+        <div class="card">
+          <img src="img/detail-crate.jpg" width="1000" height="625" loading="lazy" alt="A wooden crate of record sleeves with one lifted out, labelled Greenhouse by The Late Hours.">
+          <h3>Every song ends up in the crate</h3>
+          <p>When a song ends its sleeve drops into the crate. Hover to flip through, click one to play it again.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="rooms" class="alt">
+    <div class="wrap">
+      <div class="head">
+        <div class="eyebrow">Three rooms</div>
+        <h2>Pick the mood.</h2>
+        <p>Switch rooms from the menu bar. Each one is just a folder of images, so you can make your own.</p>
+      </div>
+      <div class="rooms">
+        <div class="room">
+          <img src="img/crate.jpg" width="1200" height="718" loading="lazy" alt="The Evening room, lit by a floor lamp.">
+          <h3>Evening</h3>
+          <p>Lamp light, dust drifting in the glow, the city outside.</p>
+        </div>
+        <div class="room">
+          <img src="img/rainy.jpg" width="1200" height="718" loading="lazy" alt="The Rainy Window room, darker with rain on the window.">
+          <h3>Rainy Window</h3>
+          <p>Blue dusk and rain running down the glass.</p>
+        </div>
+        <div class="room">
+          <img src="img/minimal.jpg" width="1200" height="718" loading="lazy" alt="The Minimal room, bright and simple.">
+          <h3>Minimal</h3>
+          <p>Calm and clean, for a desktop that stays out of the way.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="setup">
+    <div class="wrap">
+      <div class="head">
+        <div class="eyebrow">Setup</div>
+        <h2>Two minutes, three steps.</h2>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <h3>Install the app</h3>
+          <p><a href="https://github.com/rohan2025/33rpm/releases/latest/download/33rpm.dmg">Download 33rpm</a>, open the file
+            and drag 33rpm into Applications.</p>
+        </div>
+        <div class="step">
+          <h3>Add the extension</h3>
+          <p>Add <a href="https://chromewebstore.google.com/detail/33rpm-bridge/biiiggaibbnengablmcboeaehlhmffnj">33rpm Bridge</a>
+            to Chrome. It tells the app what YouTube Music is playing.</p>
+        </div>
+        <div class="step">
+          <h3>Pair and play</h3>
+          <p>Copy the pairing code from 33rpm's Setup Guide, paste it into the extension, and play something on
+            music.youtube.com.</p>
+        </div>
+      </div>
+      <p class="note"><strong>The first time you open it,</strong> macOS will say it can't verify the developer, because 33rpm is a
+        free hobby app that isn't notarized by Apple. Open <strong>System Settings → Privacy &amp; Security</strong>, scroll down and
+        click <strong>Open Anyway</strong>. You only do this once.</p>
+    </div>
+  </section>
+
+  <section id="privacy" class="alt">
+    <div class="wrap">
+      <div class="head">
+        <div class="eyebrow">Privacy</div>
+        <h2>Everything stays on your Mac.</h2>
+        <p>The extension talks only to the app on your own computer. Nothing goes to a server, because there isn't one.</p>
+      </div>
+      <div class="facts">
+        <div class="fact"><b>No account</b><span>Nothing to sign up for.</span></div>
+        <div class="fact"><b>No tracking</b><span>No analytics, no ads, no data collected.</span></div>
+        <div class="fact"><b>~0% CPU</b><span>Native Swift and Core Animation.</span></div>
+        <div class="fact"><b>Open source</b><span>MIT licensed, <a href="https://github.com/rohan2025/33rpm">on GitHub</a>.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap cta">
+    <h2>Put a record on.</h2>
+    <div class="btns">
+      <a class="btn btn-primary" href="https://github.com/rohan2025/33rpm/releases/latest/download/33rpm.dmg">Download for Mac</a>
+      <a class="btn btn-ghost" href="https://chromewebstore.google.com/detail/33rpm-bridge/biiiggaibbnengablmcboeaehlhmffnj">Add to Chrome</a>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <a href="https://github.com/rohan2025/33rpm">GitHub</a>
+      <a href="https://github.com/rohan2025/33rpm/releases">All releases</a>
+      <a href="https://github.com/rohan2025/33rpm/blob/main/PRIVACY.md">Privacy policy</a>
+      <a href="https://github.com/rohan2025/33rpm/issues">Report a problem</a>
+    </div>
+    <div>Made by Rohan Verma. Not affiliated with YouTube or Google.</div>
+  </div>
+</footer>
+
+<script>
+  // Show the latest version number next to the download button; the button itself always gets the newest release.
+  fetch("https://api.github.com/repos/rohan2025/33rpm/releases/latest")
+    .then(r => r.ok ? r.json() : null)
+    .then(r => { if (r && r.tag_name) document.getElementById("version").textContent = "Version " + r.tag_name.replace(/^v/, ""); })
+    .catch(() => {});
+  const header = document.querySelector("header");
+  addEventListener("scroll", () => header.classList.toggle("scrolled", scrollY > 8), { passive: true });
+</script>
+</body>
+</html>
