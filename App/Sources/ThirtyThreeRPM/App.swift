@@ -17,7 +17,6 @@ struct ThirtyThreeRPMApp: App {
                            loginItem: appDelegate.loginItem,
                            copyToken: appDelegate.copyToken,
                            showDebugWindow: appDelegate.showDebugWindow,
-                           openScenesFolder: appDelegate.openScenesFolder,
                            showSettings: appDelegate.showSettings,
                            showWelcome: appDelegate.showWelcome)
         } label: {
@@ -66,10 +65,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func copyToken() {
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(token, forType: .string)
-    }
-
-    func openScenesFolder() {
-        NSWorkspace.shared.open(SceneLibrary.editableFolder(for: settings.scene))
     }
 
     func showWelcome() {

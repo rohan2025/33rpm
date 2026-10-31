@@ -2,6 +2,7 @@ import AppKit
 import Combine
 import CoreServices
 import ImageIO
+import Security
 
 /// Layout for one scene, read from `Scenes/<Folder>/scene.json`.
 /// Coordinates are in canvas points with the origin at the top-left.
@@ -151,20 +152,21 @@ extension SceneID {
     }
 }
 
-/// Finds scene files. Each file is looked up in order:
-///   1. ~/Library/Application Support/33rpm/Scenes/<Folder>/   (personal overrides)
-///   2. <repo>/Scenes/<Folder>/                                  (when built from this checkout)
-///   3. 33rpm.app/Contents/Resources/Scenes/<Folder>/            (bundled copy)
+/// Finds scene files. Release builds read only the copy sealed inside the app:
+///   33rpm.app/Contents/Resources/Scenes/<Folder>/
+/// Debug builds read <repo>/Scenes/<Folder>/ instead, and reload when it changes, for working on the art.
 /// Missing PNGs get a drawn placeholder; a missing scene falls back to Evening.
 enum SceneLibrary {
-    static var userRoot: URL { PairingToken.directory.appendingPathComponent("Scenes", isDirectory: true) }
-
     static var repoRoot: URL? {
+        #if DEBUG
         let url = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent().deletingLastPathComponent()
             .deletingLastPathComponent().deletingLastPathComponent()
             .appendingPathComponent("Scenes", isDirectory: true)
         return FileManager.default.fileExists(atPath: url.path) ? url : nil
+        #else
+        return nil
+        #endif
     }
 
     static var bundleRoot: URL? {
@@ -173,7 +175,20 @@ enum SceneLibrary {
         return url
     }
 
-    static var searchRoots: [URL] { [userRoot] + [repoRoot, bundleRoot].compactMap { $0 } }
+    /// Whether the app's signature still covers its files. If someone swaps the images inside 33rpm.app,
+    /// the seal breaks and the rooms are drawn with placeholders instead of the edited art.
+    static let bundleSealed: Bool = {
+        var code: SecStaticCode?
+        guard SecStaticCodeCreateWithPath(Bundle.main.bundleURL as CFURL, [], &code) == errSecSuccess, let code,
+              SecStaticCodeCheckValidity(code, SecCSFlags(rawValue: kSecCSCheckAllArchitectures), nil) == errSecSuccess
+        else {
+            NSLog("33rpm: app files don't match its signature, drawing placeholder art")
+            return false
+        }
+        return true
+    }()
+
+    static var searchRoots: [URL] { [repoRoot, bundleRoot].compactMap { $0 } }
 
     static func file(_ name: String, in folder: String) -> URL? {
         for root in searchRoots {
@@ -181,15 +196,6 @@ enum SceneLibrary {
             if FileManager.default.fileExists(atPath: url.path) { return url }
         }
         return nil
-    }
-
-    /// The folder to open for editing: the repo copy if present, else the personal override folder.
-    static func editableFolder(for id: SceneID) -> URL {
-        if let repo = repoRoot?.appendingPathComponent(id.folderName),
-           FileManager.default.fileExists(atPath: repo.path) { return repo }
-        let url = userRoot.appendingPathComponent(id.folderName)
-        try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
-        return url
     }
 
     static func load(_ id: SceneID) -> LoadedScene? {
@@ -220,6 +226,7 @@ enum SceneLibrary {
 
     static func image(named slot: String, in folder: String) -> CGImage? {
         guard let url = file("\(slot).png", in: folder),
+              repoRoot != nil || bundleSealed,
               let source = CGImageSourceCreateWithURL(url as CFURL, [kCGImageSourceShouldCache: false] as CFDictionary)
         else { return nil }
         return CGImageSourceCreateImageAtIndex(source, 0, [kCGImageSourceShouldCacheImmediately: true] as CFDictionary)
@@ -238,16 +245,16 @@ final class SceneRuntime: ObservableObject {
 
     init(settings: AppSettings) {
         self.settings = settings
-        try? FileManager.default.createDirectory(at: SceneLibrary.userRoot, withIntermediateDirectories: true)
         scene = SceneLibrary.load(settings.scene)
 
         settings.$scene.dropFirst().removeDuplicates()
             .sink { [weak self] id in self?.scene = SceneLibrary.load(id) ?? self?.scene }
             .store(in: &cancellables)
 
-        let paths = [SceneLibrary.userRoot, SceneLibrary.repoRoot].compactMap { $0?.path }
-        watcher = FolderWatcher(paths: paths) { [weak self] in
-            MainActor.assumeIsolated { self?.scheduleReload() }
+        if let repo = SceneLibrary.repoRoot {
+            watcher = FolderWatcher(paths: [repo.path]) { [weak self] in
+                MainActor.assumeIsolated { self?.scheduleReload() }
+            }
         }
     }
 

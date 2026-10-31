@@ -82,7 +82,7 @@ No account, no analytics, ~0% CPU. It's all Core Animation.
 **Reply 4:**
 
 ```
-Three rooms so far: Evening, Rainy Window and Minimal. Each one is just a folder of images, so you can make your own.
+Three rooms so far: Evening, Rainy Window and Minimal. More are coming.
 
 Which room should I build next?
 ```
@@ -141,7 +141,7 @@ Source code: https://github.com/rohan2025/33rpm
   >
   > Things to try: hover the crate to flip through what you've played and click a sleeve to replay it, click the turntable to pause, and switch to the Rainy Window room at night.
   >
-  > The rooms are AI-generated and you can drop in your own art; each scene is just a folder of PNGs and a JSON file. Would love to hear which room you'd want next!
+  > The rooms are AI-generated, and more are on the way. Would love to hear which room you'd want next!
 
 ## Chrome Web Store listing (for 33rpm-bridge-1.2.2.zip)
 

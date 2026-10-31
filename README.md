@@ -103,11 +103,12 @@ Each scene is a folder in `Scenes/` (`Evening`, `RainyWindow`, `Minimal`) holdin
 All three ship with photoreal art generated in ChatGPT: one room photo per scene (the Rainy and Minimal rooms are
 edits of the Evening photo, so the console and turntable sit in exactly the same place) plus a top-down record,
 tonearm and crate front shared by all three. The originals are kept in each scene's `_sources/` folder (not bundled).
-Any slot without a PNG is drawn as a simple placeholder. **Menu bar → Open Scenes Folder** opens the current one.
+Any slot without a PNG is drawn as a simple placeholder. The released app only uses the rooms sealed inside it;
+to work on the art, run a debug build (`scripts/build_app.sh debug --run`), which reads this folder.
 For ready-made AI image prompts and the recommended "one painted room" approach, see
 [Scenes/ART_PROMPTS.md](Scenes/ART_PROMPTS.md).
 
-The app picks up changes live (no rebuild): save a PNG or edit `scene.json` and the desktop updates in a moment.
+A debug build picks up changes live (no rebuild): save a PNG or edit `scene.json` and the desktop updates in a moment.
 Files are looked up in this order, first match wins:
 
 1. `~/Library/Application Support/33rpm/Scenes/<Scene>/` (personal overrides)

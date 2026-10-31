@@ -8,7 +8,6 @@ struct MenuBarContent: View {
     @ObservedObject var loginItem: LoginItem
     let copyToken: () -> Void
     let showDebugWindow: () -> Void
-    let openScenesFolder: () -> Void
     let showSettings: () -> Void
     let showWelcome: () -> Void
 
@@ -54,7 +53,6 @@ struct MenuBarContent: View {
                                                 set: { loginItem.setEnabled($0) }))
         Button("Settings…", action: showSettings)
             .keyboardShortcut(",")
-        Button("Open Scenes Folder", action: openScenesFolder)
         Button("Copy Pairing Token", action: copyToken)
         Button("Setup Guide…", action: showWelcome)
         Button("Show Debug Window", action: showDebugWindow)
