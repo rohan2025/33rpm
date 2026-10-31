@@ -284,6 +284,8 @@
 </footer>
 
 <!-- Anonymous visit counts: no cookies, no personal data. Skips localhost. -->
+<!-- Count /?ref=x and / as the same page; GoatCounter still reads ?ref= as the source. -->
+<script>window.goatcounter = { path: function () { return location.pathname } }</script>
 <script data-goatcounter="https://33rpm.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 <script>
   // Show the latest version number next to the download button; the button itself always gets the newest release.
