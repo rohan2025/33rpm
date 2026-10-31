@@ -6,7 +6,7 @@ Everything below is a draft: edit freely before posting. Images are in this fold
 
 - [ ] Record a 15–30 s screen video (shot list below). This is the single most important asset.
 - [ ] Build the release: `scripts/package.sh` → `build/release/33rpm-1.2.2.dmg` and `33rpm-bridge-1.2.1.zip`.
-- [x] Download page: https://github.com/rohan2025/33rpm/releases/latest (public repo, MIT license, latest DMG attached).
+- [x] Website: https://rohan2025.github.io/33rpm/ (GitHub Pages from `docs/`; download button gets the latest release).
 - [x] Chrome Web Store: live at https://chromewebstore.google.com/detail/33rpm-bridge/biiiggaibbnengablmcboeaehlhmffnj
 - [ ] Optional: Apple Developer Program ($99/yr) + notarization removes the "can't verify developer" warning.
       Without it, people open it via System Settings → Privacy & Security → Open Anyway (explained in the DMG's Read Me).
@@ -44,7 +44,7 @@ Tip: export at 1080p, trim in QuickTime (Cmd+T), keep it silent or add a short m
    > • dust drifts in the lamp light 🕯️
 2. > Click the turntable to pause, click a song on the "Up Next" card on the wall to jump to it. Three rooms: Evening, Rainy Window, Minimal.
 3. > How it works: a tiny Chrome extension reads what YouTube Music is playing and sends it to a native Swift app over localhost. No accounts, no analytics, ~0% CPU (it's all Core Animation).
-4. > Download (macOS 14+, free): https://github.com/rohan2025/33rpm
+4. > Download (macOS 14+, free): https://rohan2025.github.io/33rpm/
    > Chrome extension: https://chromewebstore.google.com/detail/33rpm-bridge/biiiggaibbnengablmcboeaehlhmffnj
 
 ## Product Hunt
@@ -57,7 +57,7 @@ Tip: export at 1080p, trim in QuickTime (Cmd+T), keep it silent or add a short m
 - **Thumbnail:** `ph-thumbnail-240.png`
 - **Gallery (1270×760, these are 2× so they stay sharp):** `1-evening.jpg`, `2-crate-browse.jpg`, `3-rainy-window.jpg`, `4-minimal.jpg`, `5-idle.jpg`, plus the video.
 - **Pricing:** Free
-- **Links:** Website / download: https://github.com/rohan2025/33rpm
+- **Links:** Website / download: https://rohan2025.github.io/33rpm/ · Source: https://github.com/rohan2025/33rpm
 - **Maker's first comment:**
   > Hi Product Hunt 👋 I listen to YouTube Music all day and missed the ritual of a record player, so I built one into my desktop.
   >
@@ -87,7 +87,7 @@ Tip: export at 1080p, trim in QuickTime (Cmd+T), keep it silent or add a short m
   - Connects only to `ws://127.0.0.1` (the user's own computer).
 - **Privacy / data usage:** Collects no user data. Nothing is sold, transferred or used for anything other than the single purpose above.
 - **Privacy policy URL:** https://github.com/rohan2025/33rpm/blob/main/PRIVACY.md
-- **Homepage / support URL:** https://github.com/rohan2025/33rpm
+- **Homepage URL:** https://rohan2025.github.io/33rpm/ · **Support URL:** https://github.com/rohan2025/33rpm/issues
 - **Images:** icon `extension/icon128.png`, screenshots `cws-screenshot-1..3.png` (1280×800), small promo tile `cws-promo-440x280.png`.
 
 ## Notes
