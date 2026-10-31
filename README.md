@@ -16,8 +16,8 @@ music.youtube.com tab ──► Chrome extension (MV3) ──ws://127.0.0.1:3333
 
 1. Download **[33rpm for Mac](https://github.com/rohan2025/33rpm/releases/latest/download/33rpm.dmg)** (latest release),
    drag **33rpm** into Applications and open it.
-   It's a free hobby app and isn't notarized, so macOS will block it the first time:
-   open **System Settings → Privacy & Security**, scroll down and click **Open Anyway**.
+   It's a free hobby app and isn't notarized, so the first time macOS says *"33rpm" Not Opened*.
+   Click **Done** (not Move to Trash), open **System Settings → Privacy & Security**, scroll down and click **Open Anyway**.
 2. Add **[33rpm Bridge from the Chrome Web Store](https://chromewebstore.google.com/detail/33rpm-bridge/biiiggaibbnengablmcboeaehlhmffnj)**.
 3. The **Setup Guide** opens on first launch (also in the menu bar): copy your pairing token there,
    click the 33rpm Bridge icon in Chrome's toolbar, paste the token, **Save**.

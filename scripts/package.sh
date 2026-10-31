@@ -21,8 +21,9 @@ cat > "$STAGE/Read Me First.txt" <<'TXT'
 33rpm: a record player on your desktop for YouTube Music
 
 1. Drag 33rpm into Applications and open it.
-   macOS will say it can't verify the developer (this is a free hobby app, not notarized).
-   Go to System Settings > Privacy & Security, scroll down and click "Open Anyway".
+   macOS will say "33rpm" Not Opened (this is a free hobby app, not notarized yet).
+   Click Done (not Move to Trash), then go to System Settings > Privacy & Security,
+   scroll down and click "Open Anyway". You only do this once.
 
 2. In Chrome, add the 33rpm Bridge extension from the Chrome Web Store:
    https://chromewebstore.google.com/detail/33rpm-bridge/biiiggaibbnengablmcboeaehlhmffnj

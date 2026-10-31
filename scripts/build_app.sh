@@ -14,7 +14,7 @@ rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN" "$APP/Contents/MacOS/33rpm"
 cp "$ROOT/Assets/AppIcon.icns" "$APP/Contents/Resources/AppIcon.icns"
-[[ -d "$ROOT/Scenes" ]] && rsync -a --exclude "_sources" "$ROOT/Scenes/" "$APP/Contents/Resources/Scenes/"
+[[ -d "$ROOT/Scenes" ]] && rsync -a --exclude "_sources" --exclude "*.md" --exclude ".DS_Store" "$ROOT/Scenes/" "$APP/Contents/Resources/Scenes/"
 
 cat > "$APP/Contents/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
