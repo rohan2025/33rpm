@@ -12,6 +12,19 @@ Everything below is a draft: edit freely before posting. Images are in this fold
       Without it, people open it via System Settings → Privacy & Security → Open Anyway (explained in the DMG's Read Me).
 - [ ] Try the DMG on a second Mac or a fresh user account if you can.
 
+## Links to post (tagged, so GoatCounter shows which post brought people)
+
+Use these instead of the bare website link. The tag only says where the click came from, nothing about the person.
+
+- X: `https://rohan2025.github.io/33rpm/?ref=x`
+- LinkedIn: `https://rohan2025.github.io/33rpm/?ref=linkedin`
+- Reddit: `https://rohan2025.github.io/33rpm/?ref=reddit`
+- Hacker News: `https://rohan2025.github.io/33rpm/?ref=hn`
+- Product Hunt: `https://rohan2025.github.io/33rpm/?ref=producthunt`
+
+Numbers: website visits and button clicks at https://33rpm.goatcounter.com, app downloads with `scripts/stats.sh`,
+extension installs in the Chrome Web Store dashboard.
+
 ## Demo video shot list (Cmd+Shift+5 → Record Selected Portion)
 
 Set Size → Full, Scene → Evening, ambient effects on. Close windows so the desktop shows.
@@ -44,7 +57,7 @@ Tip: export at 1080p, trim in QuickTime (Cmd+T), keep it silent or add a short m
    > • dust drifts in the lamp light 🕯️
 2. > Click the turntable to pause, click a song on the "Up Next" card on the wall to jump to it. Three rooms: Evening, Rainy Window, Minimal.
 3. > How it works: a tiny Chrome extension reads what YouTube Music is playing and sends it to a native Swift app over localhost. No accounts, no analytics, ~0% CPU (it's all Core Animation).
-4. > Download (macOS 14+, free): https://rohan2025.github.io/33rpm/
+4. > Download (macOS 14+, free): https://rohan2025.github.io/33rpm/?ref=x
    > Chrome extension: https://chromewebstore.google.com/detail/33rpm-bridge/biiiggaibbnengablmcboeaehlhmffnj
 
 ## Product Hunt
@@ -57,7 +70,7 @@ Tip: export at 1080p, trim in QuickTime (Cmd+T), keep it silent or add a short m
 - **Thumbnail:** `ph-thumbnail-240.png`
 - **Gallery (1270×760, these are 2× so they stay sharp):** `1-evening.jpg`, `2-crate-browse.jpg`, `3-rainy-window.jpg`, `4-minimal.jpg`, `5-idle.jpg`, plus the video.
 - **Pricing:** Free
-- **Links:** Website / download: https://rohan2025.github.io/33rpm/ · Source: https://github.com/rohan2025/33rpm
+- **Links:** Website / download: https://rohan2025.github.io/33rpm/?ref=producthunt · Source: https://github.com/rohan2025/33rpm
 - **Maker's first comment:**
   > Hi Product Hunt 👋 I listen to YouTube Music all day and missed the ritual of a record player, so I built one into my desktop.
   >

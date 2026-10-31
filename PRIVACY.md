@@ -1,8 +1,8 @@
 # Privacy policy
 
-_Last updated: October 28, 2026_
+_Last updated: October 31, 2026_
 
-This policy covers **33rpm** (the macOS app) and **33rpm Bridge** (the Chrome extension).
+This policy covers **33rpm** (the macOS app), **33rpm Bridge** (the Chrome extension) and the 33rpm website.
 
 ## What the extension reads
 
@@ -22,6 +22,13 @@ Nothing is sent to the developer or to any other server. There are no accounts, 
 - The 33rpm app keeps a list of songs you have played (for the crate) and your settings, on your Mac.
 
 You can remove all of it by uninstalling the extension and deleting the app.
+
+## The website
+
+The download page at https://rohan2025.github.io/33rpm/ counts visits with [GoatCounter](https://www.goatcounter.com),
+a privacy-friendly analytics service: page views, which site sent you, country, browser and screen size, and clicks on
+the download buttons. It sets no cookies and stores no personal data or IP addresses. The app and the extension do not
+use it and send nothing to it.
 
 ## Sharing
 
