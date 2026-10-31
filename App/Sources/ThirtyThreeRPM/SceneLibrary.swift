@@ -2,7 +2,7 @@ import AppKit
 import Combine
 import CoreServices
 import ImageIO
-import Security
+import CryptoKit
 
 /// Layout for one scene, read from `Scenes/<Folder>/scene.json`.
 /// Coordinates are in canvas points with the origin at the top-left.
@@ -152,7 +152,7 @@ extension SceneID {
     }
 }
 
-/// Finds scene files. Release builds read only the copy sealed inside the app:
+/// Finds scene files. Release builds read only the copy inside the app, checked against SceneFingerprints:
 ///   33rpm.app/Contents/Resources/Scenes/<Folder>/
 /// Debug builds read <repo>/Scenes/<Folder>/ instead, and reload when it changes, for working on the art.
 /// Missing PNGs get a drawn placeholder; a missing scene falls back to Evening.
@@ -175,25 +175,26 @@ enum SceneLibrary {
         return url
     }
 
-    /// Whether the app's signature still covers its files. If someone swaps the images inside 33rpm.app,
-    /// the seal breaks and the rooms are drawn with placeholders instead of the edited art.
-    static let bundleSealed: Bool = {
-        var code: SecStaticCode?
-        guard SecStaticCodeCreateWithPath(Bundle.main.bundleURL as CFURL, [], &code) == errSecSuccess, let code,
-              SecStaticCodeCheckValidity(code, SecCSFlags(rawValue: kSecCSCheckAllArchitectures), nil) == errSecSuccess
-        else {
-            NSLog("33rpm: app files don't match its signature, drawing placeholder art")
-            return false
-        }
+    /// Release builds only accept a bundled file whose contents match the fingerprint compiled into the app,
+    /// so swapped or edited room art is ignored (the slot falls back to its drawn placeholder).
+    static func isOriginal(_ url: URL, name: String) -> Bool {
+        #if DEBUG
         return true
-    }()
+        #else
+        guard let expected = SceneFingerprints.sha256[name], let data = try? Data(contentsOf: url) else { return false }
+        let actual = SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+        if actual != expected { NSLog("33rpm: ignoring modified scene file \(name)") }
+        return actual == expected
+        #endif
+    }
 
     static var searchRoots: [URL] { [repoRoot, bundleRoot].compactMap { $0 } }
 
     static func file(_ name: String, in folder: String) -> URL? {
         for root in searchRoots {
             let url = root.appendingPathComponent(folder).appendingPathComponent(name)
-            if FileManager.default.fileExists(atPath: url.path) { return url }
+            guard FileManager.default.fileExists(atPath: url.path) else { continue }
+            return root == repoRoot || isOriginal(url, name: "\(folder)/\(name)") ? url : nil
         }
         return nil
     }
@@ -226,7 +227,6 @@ enum SceneLibrary {
 
     static func image(named slot: String, in folder: String) -> CGImage? {
         guard let url = file("\(slot).png", in: folder),
-              repoRoot != nil || bundleSealed,
               let source = CGImageSourceCreateWithURL(url as CFURL, [kCGImageSourceShouldCache: false] as CFDictionary)
         else { return nil }
         return CGImageSourceCreateImageAtIndex(source, 0, [kCGImageSourceShouldCacheImmediately: true] as CFDictionary)
