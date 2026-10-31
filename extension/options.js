@@ -1,5 +1,4 @@
 const tokenEl = document.getElementById('token');
-const portEl = document.getElementById('port');
 const statusEl = document.getElementById('status');
 
 const LABELS = {
@@ -15,9 +14,8 @@ function renderStatus({ status, detail }) {
   statusEl.textContent = (LABELS[status] || 'Unknown') + (detail ? ` — ${detail}` : '');
 }
 
-chrome.storage.local.get(['token', 'port']).then(({ token, port }) => {
+chrome.storage.local.get('token').then(({ token }) => {
   tokenEl.value = token || '';
-  portEl.value = port || '';
 });
 chrome.storage.session.get(['status', 'detail']).then(renderStatus);
 chrome.storage.onChanged.addListener((_changes, area) => {
@@ -25,7 +23,6 @@ chrome.storage.onChanged.addListener((_changes, area) => {
 });
 
 document.getElementById('save').addEventListener('click', async () => {
-  const port = Number(portEl.value) || 33333;
-  await chrome.storage.local.set({ token: tokenEl.value.trim(), port });
+  await chrome.storage.local.set({ token: tokenEl.value.trim() });
   renderStatus({ status: 'connecting' });
 });

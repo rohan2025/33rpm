@@ -18,7 +18,7 @@ Nothing is sent to the developer or to any other server. There are no accounts, 
 
 ## What is stored
 
-- The extension saves the pairing token and port you enter, in Chrome's extension storage on your computer.
+- The extension saves the pairing token you enter, in Chrome's extension storage on your computer.
 - The 33rpm app keeps a list of songs you have played (for the crate) and your settings, on your Mac.
 
 You can remove all of it by uninstalling the extension and deleting the app.

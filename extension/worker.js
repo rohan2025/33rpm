@@ -1,5 +1,5 @@
 // 33rpm service worker: owns the WebSocket to the Mac app and routes messages between it and the tab.
-const DEFAULT_PORT = 33333;
+const PORT = 33333; // fixed: the app always listens here
 const PING_MS = 20000;
 const MAX_BACKOFF_MS = 30000;
 
@@ -15,8 +15,8 @@ let lastState = null;
 let lastQueue = null;
 
 async function loadConfig() {
-  const c = await chrome.storage.local.get(['token', 'port']);
-  return { token: (c.token || '').trim(), port: Number(c.port) || DEFAULT_PORT };
+  const c = await chrome.storage.local.get('token');
+  return { token: (c.token || '').trim(), port: PORT };
 }
 
 function setStatus(status, detail = '') {
@@ -211,7 +211,7 @@ chrome.tabs.onUpdated.addListener((tabId, info) => {
 });
 
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area !== 'local' || !(changes.token || changes.port)) return;
+  if (area !== 'local' || !changes.token) return;
   authFailed = false;
   backoff = 1000;
   if (ws) ws.close();
@@ -229,6 +229,11 @@ async function injectIntoOpenTabs() {
   }
 }
 
-chrome.runtime.onInstalled.addListener(() => { injectIntoOpenTabs(); connect(); });
+// Earlier versions let people pick a port; the app only listens on 33333, so forget any saved one.
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.storage.local.remove('port').catch(() => {});
+  injectIntoOpenTabs();
+  connect();
+});
 chrome.runtime.onStartup.addListener(connect);
 connect();

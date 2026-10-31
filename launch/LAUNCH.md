@@ -5,7 +5,7 @@ Everything below is a draft: edit freely before posting. Images are in this fold
 ## Before you post (checklist)
 
 - [x] Demo video recorded (Cap). A silent web version is at the top of the website (`docs/demo.mp4`).
-- [ ] Build the release: `scripts/package.sh` → `build/release/33rpm-1.2.2.dmg` and `33rpm-bridge-1.2.1.zip`.
+- [ ] Build the release: `scripts/package.sh` → `build/release/33rpm-1.2.2.dmg` and `33rpm-bridge-1.2.2.zip`.
 - [x] Website: https://rohan2025.github.io/33rpm/ (GitHub Pages from `docs/`; download button gets the latest release).
 - [x] Chrome Web Store: live at https://chromewebstore.google.com/detail/33rpm-bridge/biiiggaibbnengablmcboeaehlhmffnj
 - [ ] Optional: Apple Developer Program ($99/yr) + notarization removes the "can't verify developer" warning.
@@ -143,7 +143,7 @@ Source code: https://github.com/rohan2025/33rpm
   >
   > The rooms are AI-generated and you can drop in your own art; each scene is just a folder of PNGs and a JSON file. Would love to hear which room you'd want next!
 
-## Chrome Web Store listing (for 33rpm-bridge-1.2.1.zip)
+## Chrome Web Store listing (for 33rpm-bridge-1.2.2.zip)
 
 - **Name:** 33rpm Bridge
 - **Summary** (≤132): `Shows what's playing in YouTube Music on the 33rpm turntable for macOS. Talks only to the 33rpm app on your own computer.`
@@ -156,7 +156,7 @@ Source code: https://github.com/rohan2025/33rpm
   > Nothing is sent anywhere else. No accounts, no analytics, no tracking.
 - **Single purpose:** Relay YouTube Music playback state to the user's local 33rpm desktop app and accept playback commands from it.
 - **Permission justifications:**
-  - `storage`: saves the pairing token and port the user enters.
+  - `storage`: saves the pairing token the user enters.
   - `alarms`: wakes the background worker to reconnect to the local app if it restarts.
   - `scripting`: re-attaches to already-open YouTube Music tabs after install, and switches songs inside the YouTube Music page when the user picks one in 33rpm.
   - Host `https://music.youtube.com/*`: reads the now-playing info and queue on YouTube Music, and nowhere else.
