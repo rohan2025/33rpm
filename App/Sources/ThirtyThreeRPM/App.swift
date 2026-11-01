@@ -45,6 +45,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Menu bar only, no Dock icon. The bundle sets LSUIElement; this covers `swift run`.
         NSApp.setActivationPolicy(.accessory)
 
+        // Opening a second copy (say, another 33rpm.app found by Spotlight) hands over to the one already running.
+        let others = NSRunningApplication.runningApplications(withBundleIdentifier: Bundle.main.bundleIdentifier ?? "")
+            .filter { $0 != NSRunningApplication.current }
+        if !others.isEmpty {
+            DistributedNotificationCenter.default().postNotificationName(Self.showRequest, object: nil,
+                                                                         deliverImmediately: true)
+            NSApp.terminate(nil)
+            return
+        }
+        DistributedNotificationCenter.default().addObserver(forName: Self.showRequest, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.showYourself() }
+        }
+
         let server = NowPlayingServer(token: token)
         server.onEvent = { [weak self] event in self?.handle(event) }
         store.commandSink = { [weak server] command, extra in server?.send(command: command, extra: extra) }
@@ -62,6 +75,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         desktopWindow = desktop
     }
 
+    private static let showRequest = Notification.Name("com.rohanverma.33rpm.show")
+
+    /// Opening 33rpm again (Spotlight, Finder, Launchpad) brings the turntable back if it was hidden and opens
+    /// the Setup Guide, since a menu bar app has no window of its own to show.
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        showYourself()
+        return false
+    }
+
+    func showYourself() {
+        settings.isVisible = true
+        showWelcome()
+    }
+
     func copyToken() {
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(token, forType: .string)
@@ -73,14 +100,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                                   backing: .buffered, defer: false)
             window.title = "Set up 33rpm"
             window.isReleasedWhenClosed = false
+            // Show up on whatever Space is active, even over a full-screen app, instead of behind it.
+            window.collectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary]
             window.contentView = NSHostingView(rootView: WelcomeView(store: store, token: token) { [weak window] in
                 window?.close()
             })
+            if let size = window.contentView?.fittingSize { window.setContentSize(size) }
             window.center()
             welcomeWindow = window
         }
         NSApp.activate(ignoringOtherApps: true)
         welcomeWindow?.makeKeyAndOrderFront(nil)
+        welcomeWindow?.orderFrontRegardless()
     }
 
     func showSettings() {

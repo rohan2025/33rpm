@@ -34,6 +34,10 @@ cat > "$STAGE/Read Me First.txt" <<'TXT'
 
 4. Play something on music.youtube.com.
 
+Where is it? 33rpm has no window or Dock icon. It lives in the menu bar (a small disc
+icon) and the turntable draws on your desktop, behind your windows. If you lose it,
+open 33rpm again from Applications and the Setup Guide pops up.
+
 Everything stays on your Mac (127.0.0.1). No accounts, no analytics.
 TXT
 

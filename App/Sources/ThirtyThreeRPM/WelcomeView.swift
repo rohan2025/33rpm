@@ -41,6 +41,10 @@ struct WelcomeView: View {
                     .foregroundStyle(store.connection == .connected ? .green : .secondary)
             }
 
+            Text("33rpm lives in the menu bar (the disc icon) and draws on your desktop, behind your windows.")
+                .font(.callout)
+                .fixedSize(horizontal: false, vertical: true)
+
             HStack {
                 Text("Everything stays on this Mac (127.0.0.1). No accounts, no analytics.")
                     .font(.caption)

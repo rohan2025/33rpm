@@ -23,6 +23,9 @@ music.youtube.com tab ──► Chrome extension (MV3) ──ws://127.0.0.1:3333
    click the 33rpm Bridge icon in Chrome's toolbar, paste the token, **Save**.
 4. Play something on music.youtube.com.
 
+33rpm has no window or Dock icon: it lives in the menu bar (the disc icon) and draws on your desktop, behind your
+windows. Opening it again from Applications or Spotlight brings the turntable back and shows the Setup Guide.
+
 ## Building from source
 
 `scripts/package.sh` builds the shareable DMG and a Chrome Web Store zip into `build/release/`.
